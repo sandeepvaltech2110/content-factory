@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+This file is used by the publish/package process of your Web project. You can customize the behavior of this process
+by editing this MSBuild file. In order to learn more about this please visit https://go.microsoft.com/fwlink/?LinkID=208121. 
+-->
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <TimeStampOfAssociatedLegacyPublishXmlFile />
+    <_PublishTargetUrl>C:\inetpub\wwwroot\Sitecore82Demo\Website</_PublishTargetUrl>
+  </PropertyGroup>
+  <ItemGroup>
+    <File Include="App_Config/Include/Sitecore.SharedSource.SmartTools.config">
+      <publishTime>01/13/2015 06:50:16</publishTime>
+    </File>
+    <File Include="bin/Microsoft.ApplicationBlocks.Data.dll">
+      <publishTime>01/13/2015 06:50:16</publishTime>
+    </File>
+    <File Include="bin/Sitecore.Kernel.dll">
+      <publishTime>01/13/2015 06:50:16</publishTime>
+    </File>
+    <File Include="bin/Sitecore.SharedSource.SmartTools.dll">
+      <publishTime>03/11/2020 11:51:12</publishTime>
+    </File>
+    <File Include="bin/Sitecore.SharedSource.SmartTools.pdb">
+      <publishTime>03/11/2020 11:51:12</publishTime>
+    </File>
+    <File Include="web.config">
+      <publishTime>03/11/2020 11:51:13</publishTime>
+    </File>
+  </ItemGroup>
+</Project>
