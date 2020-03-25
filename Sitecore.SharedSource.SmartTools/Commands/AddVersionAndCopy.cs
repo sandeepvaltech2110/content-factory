@@ -37,6 +37,9 @@
             }
             catch (Exception exception)
             {
+				
+				
+				
                 Sitecore.Diagnostics.Log.Error(exception.Message, this);
             }
         }
