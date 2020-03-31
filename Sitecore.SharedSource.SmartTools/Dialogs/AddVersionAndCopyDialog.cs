@@ -32,6 +32,7 @@
     using System.Web.UI.WebControls;
     using Sitecore.Resources.Media;
     using Sitecore.Web;
+    using System.Net.Mail;
 
     public class AddVersionAndCopyDialog : DialogForm
     {
@@ -79,9 +80,19 @@
             Sitecore.Data.Items.Item[] allItems = database.SelectItems("fast:/sitecore/content//*[@@templateid='{E1070C26-B6EB-489B-BB5B-B29AE1F97BDE}']");
 
             var item = sites.GetChildren().Where(w => w.TemplateID.ToString() == templateid);
+            Item itemFromQueryString = UIUtil.GetItemFromQueryString(Context.ContentDatabase);
+
             foreach (var i in allItems)
             {
                 this.Site.Add(i.Name);
+            }
+            foreach(var i in allItems)
+            {
+                string taggingpath = itemFromQueryString.Parent.Parent.Parent.Parent.Paths.FullPath.ToString().Remove(0, 22);
+                if (taggingpath == i.Name)
+                {
+                    this.Site.Remove(taggingpath);
+                }
             }
 
 
@@ -114,7 +125,7 @@
 
 
                     string str = "<script type='text/javascript'>function toggleChkBoxMethod2(formName){var form=$(formName);var i=form.getElements('checkbox'); i.each(function(item){item.checked = !item.checked;});$('togglechkbox').checked = !$('togglechkbox').checked;}</script>";
-                    str = str + "<table><tr><td>Toggle All Checkboxes:</td><td><input type='checkbox' id='togglechkbox' onClick=toggleChkBoxMethod2(ctl15); /></td></tr><tr></tr><tr></tr>";
+                    str = str + "<table>";
                     this.fillLanguageDictionary();
                     this.fillSiteDictionary();
                     foreach (KeyValuePair<string, string> pair in this.langNames)
@@ -132,10 +143,16 @@
                     ////this.TargetLanguages.Text = str;
                     if (itemFromQueryString != null)
                     {
-                        foreach (var site in this.Site)
-                        {
-                                
-                                string str2 = "chk_" + site;
+                        //foreach (var site in this.Site)
+                        //{
+                        //    string taggingpath = itemFromQueryString.Parent.Parent.Parent.Parent.Paths.FullPath.ToString().Remove(0, 22);
+                        //    if (taggingpath == site)
+                        //    {
+                        //        this.Site.Remove(taggingpath);
+                        //    }
+                        //}
+                        foreach(var site in this.Site) { 
+                            string str2 = "chk_" + site;
                             string str3 = site;
                             str = str + site + "<tr><td><input class='reviewerCheckbox' type='checkbox' value='1' name='" + str2 + "'/></td></tr><br>";
                             str = str + "Product Path:" + "<input type='textbox' id='Product" + site + "'/><br>";
@@ -163,10 +180,11 @@
 
                     //Options
                     str = "";
-                    str += "<table>";
-                    str += "<tr><td>Include SubItems:</td><td><input class='optionsCheckbox' type='checkbox' value='1' name='chk_IncludeSubItems'/></td></tr>";
-                    str += "</table>";
-                    this.Options.Text = str;
+                    str += "<tr><td>Email:</td><td><input type='textbox' id='email'/></td></tr>";
+                    //str += "<table>";
+                    //str += "<tr><td>Include SubItems:</td><td><input class='optionsCheckbox' type='checkbox' value='1' name='chk_IncludeSubItems'/></td></tr>";
+                    //str += "</table>";
+                   this.Options.Text = str;
                 }
             }
             catch (Exception exception)
@@ -294,12 +312,12 @@
                 string taggingpath = source.Parent.Parent.Parent.Parent.Paths.FullPath.ToString().Remove(0, 22);
                 Item target = Context.ContentDatabase.GetItem(item.ID);
                 Database database = Context.ContentDatabase;
-               string name = site.ToString().Remove(0, 14).Replace("_","-");
-       
+                string name = site.ToString().Remove(0, 14).Replace("_", "-");
+
 
 
                 var catalogue = database.GetItem(source["Product"]);
-                          var id = source.Parent.TemplateID;
+                var id = source.Parent.TemplateID;
 
                 Database masterDb = Sitecore.Configuration.Factory.GetDatabase("master");
                 //var item1 = masterDb.SelectItems("fast:/sitecore/content/"+site+"//*[@@templateid="+id+"]");
@@ -310,294 +328,340 @@
                 var catalogue1 = targetCatalogue.SingleOrDefault(x => x.Contains(site));
 
                 if (catalogue1 == null)
-                    Context.ClientPage.ClientResponse.Alert("Required Path does not exist");
+                {
+
+                }
 
                 Sitecore.Data.Items.Item parent1 = masterDb.GetItem(catalogue1);
-               var Siteinfo= Sitecore.Configuration.Factory.GetSiteInfoList()
-                   .FirstOrDefault(x => parent1.Paths.FullPath.StartsWith(x.RootPath));
-                var siteLAnguage = Siteinfo.Properties["language"];
 
-                Language lang=Sitecore.Globalization.Language.Parse(name);
+
+                Language lang = Sitecore.Globalization.Language.Parse(name);
 
 
                 if (parent1 != null)
-                    {
+                {
                     using (new LanguageSwitcher(lang))
                     {
+                        string catalogname = "";
+
                         foreach (Item ctname in parent1.Children)
                         {
                             if (ctname.Name == catalogue.Name)
                             {
-                                
-
+                                catalogname = ctname.Name;
                             }
                         }
-                        ////// try
-                        ////// {
-                        var ite = catalogue.CopyTo(parent1, catalogue.Name);
+                            if(catalogname=="")
+                            {
+                                var ite = catalogue.CopyTo(parent1, catalogue.Name);
+
+
+                                Sitecore.Data.Fields.MultilistField multiselectField = catalogue.Fields["Brand"];
+
+                                Sitecore.Data.Items.Item[] items = multiselectField.GetItems();
+
+                                if (items != null)
+                                {
+                                    string brand1 = "";
+                                    foreach (var it in items)
+                                    {
+                                        var brand = database.GetItem(it.Paths.FullPath.Replace(taggingpath, site));
+                                        if (brand != null)
+                                        {
+                                            brand1 = brand1 + brand.ID.ToString() + "|";
+                                        }
+                                    }
+
+                                    if (brand1 != null)
+                                    {
+                                        ite.Editing.BeginEdit();
+                                        ite["Brand"] = brand1;
+                                        ite.Editing.EndEdit();
+
+
+                                    }
+                                    int count = brand1.Split('|').Length - 2;
+                                    int result = items.GetLength(0);
+                                    if (count != result)
+                                    {
+
+                                    }
+
+
+                                }
+                                Sitecore.Data.Fields.MultilistField multiselectField1 = catalogue.Fields["Benefit"];
+
+                                Sitecore.Data.Items.Item[] items1 = multiselectField1.GetItems();
+                                if (items1 != null)
+                                {
+                                    string brand1 = "";
+                                    foreach (var it in items1)
+                                    {
+                                        var brand = database.GetItem(it.Paths.FullPath.Replace(taggingpath, site));
+                                        if (brand != null)
+                                        {
+                                            brand1 = brand1 + brand.ID.ToString() + "|";
+                                        }
+                                    }
+
+                                    if (brand1 != null)
+                                    {
+                                        ite.Editing.BeginEdit();
+                                        ite["Benefit"] = brand1;
+                                        ite.Editing.EndEdit();
+
+                                    }
+                                    int count = brand1.Split('|').Length - 2;
+                                    int result = items1.GetLength(0);
+                                    if (count != result)
+                                    {
+
+                                    }
+                                }
+
+                                Sitecore.Data.Fields.MultilistField multiselectField2 = catalogue.Fields["Coverage"];
+
+                                Sitecore.Data.Items.Item[] items2 = multiselectField2.GetItems();
+                                if (items2 != null)
+                                {
+                                    string brand1 = "";
+                                    foreach (var it in items2)
+                                    {
+                                        var brand = database.GetItem(it.Paths.FullPath.Replace(taggingpath, site));
+                                        if (brand != null)
+                                        {
+                                            brand1 = brand1 + brand.ID.ToString() + "|";
+                                        }
+
+                                    }
+                                    if (brand1 != null)
+                                    {
+                                        ite.Editing.BeginEdit();
+                                        ite["Coverage"] = brand1;
+                                        ite.Editing.EndEdit();
+
+
+                                    }
+                                    int count = brand1.Split('|').Length - 2;
+                                    int result = items2.GetLength(0);
+                                    if (count != result)
+                                    {
+
+                                    }
+
+
+
+
+                                }
+
+                                Sitecore.Data.Fields.MultilistField multiselectField3 = catalogue.Fields["Finish"];
+
+                                Sitecore.Data.Items.Item[] items3 = multiselectField3.GetItems();
+                                if (items3 != null)
+                                {
+                                    string brand1 = "";
+                                    foreach (var it in items3)
+                                    {
+                                        var brand = database.GetItem(it.Paths.FullPath.Replace(taggingpath, site));
+                                        if (brand != null)
+                                        {
+                                            brand1 = brand1 + brand.ID.ToString() + "|";
+                                        }
+                                        if (brand1 == "")
+                                        {
+
+                                        }
+                                    }
+                                    if (brand1 != null)
+                                    {
+                                        ite.Editing.BeginEdit();
+                                        ite["Finish"] = brand1;
+                                        ite.Editing.EndEdit();
+
+                                    }
+                                    int count = brand1.Split('|').Length - 2;
+                                    int result = items3.GetLength(0);
+                                    if (count != result)
+                                    {
+
+                                    }
+
+                                }
+
+                                Sitecore.Data.Fields.MultilistField multiselectField4 = catalogue.Fields["Form"];
+
+                                Sitecore.Data.Items.Item[] items4 = multiselectField4.GetItems();
+                                if (items4 != null)
+                                {
+                                    string brand1 = "";
+                                    foreach (var it in items4)
+                                    {
+                                        var brand = database.GetItem(it.Paths.FullPath.Replace(taggingpath, site));
+                                        if (brand != null)
+                                        {
+                                            brand1 = brand1 + brand.ID.ToString() + "|";
+                                        }
+                                    }
+                                    if (brand1 != null)
+                                    {
+                                        ite.Editing.BeginEdit();
+                                        ite["Form"] = brand1;
+                                        ite.Editing.EndEdit();
+
+                                    }
+                                    int count = brand1.Split('|').Length - 2;
+                                    int result = items4.GetLength(0);
+                                    if (count != result)
+                                    {
+
+                                    }
+
+                                }
+
+                                //string y = "fast:#" + catalogue.Paths.FullPath.Replace(taggingpath,site) + "#//*[@@TemplateID='{9D2C8EF7-602E-48C2-98E5-727E62C4464E}']";
+                                //var childcatalogue = database.SelectItems(y);
+
+
+
+
+
+                                var product = targetProduct.SingleOrDefault(x => x.Contains(site));
+
+                                if (product == null)
+                                    Context.ClientPage.ClientResponse.Alert("Required Item Path does not exist");
+                                Sitecore.Data.Items.Item parent = masterDb.GetItem(product);
+                                if (parent != null)
+                                {
+                                string productname = "";
+                                foreach (Item ptname in parent.Children)
+                                {
+                                    if (ptname.Name == catalogue.Name)
+                                    {
+                                        productname = ptname.Name;
+                                    }
+                                }
+                                        if(productname=="")
+                                        {
+                                            var ite1 = source.CopyTo(parent, source.Name);
+                                            Sitecore.Data.Fields.MultilistField multiselectField5 = ite1.Fields["Product"];
+
+                                            Sitecore.Data.Items.Item[] items5 = multiselectField5.GetItems();
+                                            if (items5 != null)
+                                            {
+                                                foreach (var it in items5)
+                                                {
+
+                                                    ite1.Editing.BeginEdit();
+                                                    string p = catalogue.Paths.FullPath.Replace(taggingpath, site);
+                                                    //     var pro = database.GetItem(p);
+                                                    ite1["Product"] = ite.ID.ToString();
+                                                    ite1.Editing.EndEdit();
+
+                                                }
+
+                                            }
+                                            if (site == "Maybelline_V3_zh_HK")
+                                            {
+                                                using (new LanguageSwitcher("en-HK"))
+                                                {
+                                                    var ctn = ite.Versions.AddVersion();
+                                                    var ptn = ite1.Versions.AddVersion();
+                                                }
+                                            }
+
+                                        }
+                                    
+
+
+
+
+                                 
+                                   
+
+
+                                }
+                                foreach (Item child in ite.Children)
+                                {
+                                    Sitecore.Data.Fields.MultilistField shades = child.Fields["ShadeFamily"];
+                                    Sitecore.Data.Items.Item[] items5 = shades.GetItems();
+
+                                    if (items5 != null)
+                                    {
+                                        string shade = "";
+
+                                        foreach (var i in items5)
+                                        {
+                                            var shadesite = database.GetItem(i.Paths.FullPath.Replace(taggingpath, site));
+                                            if (shadesite != null)
+                                            {
+                                                shade = shade + shadesite.ID.ToString() + "|";
+                                            }
+                                        }
+                                        if (shade != null)
+                                        {
+                                            child.Editing.BeginEdit();
+                                            child["ShadeFamily"] = shade;
+                                            child.Editing.EndEdit();
+
+                                        }
+                                        int count = shade.Split('|').Length - 2;
+                                        int result = items5.GetLength(0);
+                                        if (count != result)
+                                        {
+
+                                        }
+
+
+
+
+
+
+                                    }
+
+
+
+
+                                    //Item parentItem = masterDb.Items[path];
+                                    //TemplateItem template = source.Template;
+                                    //parentItem.Add(source.Name, template);
+
+
+
+
+
+
+
+                                }
+
+
+
+
+                                //}
+
+                                /// catch (AggregateException ex)
+                                /// {
+                                ////   ex.Data.ToString();
+                                //// }
+                            }
+                            //   }
+
+
+
+
+
+
+
                         
-
-                        Sitecore.Data.Fields.MultilistField multiselectField = catalogue.Fields["Brand"];
-
-                        Sitecore.Data.Items.Item[] items = multiselectField.GetItems();
-
-                        if (items != null)
-                        {
-                            string brand1 = "";
-                            foreach (var it in items)
-                            {
-                                var brand = database.GetItem(it.Paths.FullPath.Replace(taggingpath, site));
-                                if (brand != null)
-                                {
-                                    brand1 = brand1 + brand.ID.ToString() + "|";
-                                }
-                            }
-
-                            if (brand1 != null)
-                            {
-                                ite.Editing.BeginEdit();
-                                ite["Brand"] = brand1;
-                                ite.Editing.EndEdit();
-                                if (brand1 == "")
-                                {
-
-                                }
-
-                            }
-
-
-                        }
-                        Sitecore.Data.Fields.MultilistField multiselectField1 = catalogue.Fields["Benefit"];
-
-                        Sitecore.Data.Items.Item[] items1 = multiselectField1.GetItems();
-                        if (items1 != null)
-                        {
-                            string brand1 = "";
-                            foreach (var it in items1)
-                            {
-                                var brand = database.GetItem(it.Paths.FullPath.Replace(taggingpath, site));
-                                if (brand != null)
-                                {
-                                    brand1 = brand1 + brand.ID.ToString() + "|";
-                                }
-                            }
-
-                            if (brand1 != null)
-                            {
-                                ite.Editing.BeginEdit();
-                                ite["Benefit"] = brand1;
-                                ite.Editing.EndEdit();
-
-                            }
-                            if (brand1 == "")
-                            {
-
-                            }
-                        }
-
-                        Sitecore.Data.Fields.MultilistField multiselectField2 = catalogue.Fields["Coverage"];
-
-                        Sitecore.Data.Items.Item[] items2 = multiselectField2.GetItems();
-                        if (items2 != null)
-                        {
-                            string brand1 = "";
-                            foreach (var it in items2)
-                            {
-                                var brand = database.GetItem(it.Paths.FullPath.Replace(taggingpath, site));
-                                if (brand != null)
-                                {
-                                    brand1 = brand1 + brand.ID.ToString() + "|";
-                                }
-                                if (brand1 == "")
-                                {
-
-                                }
-                            }
-                            if (brand1 != null)
-                            {
-                                ite.Editing.BeginEdit();
-                                ite["Coverage"] = brand1;
-                                ite.Editing.EndEdit();
-
-                                if (brand1 == "")
-                                {
-
-                                }
-                            }
-
-
-
-
-                        }
-
-                        Sitecore.Data.Fields.MultilistField multiselectField3 = catalogue.Fields["Finish"];
-
-                        Sitecore.Data.Items.Item[] items3 = multiselectField3.GetItems();
-                        if (items3 != null)
-                        {
-                            string brand1 = "";
-                            foreach (var it in items3)
-                            {
-                                var brand = database.GetItem(it.Paths.FullPath.Replace(taggingpath, site));
-                                if (brand != null)
-                                {
-                                    brand1 = brand1 + brand.ID.ToString() + "|";
-                                }
-                                if (brand1 == "")
-                                {
-
-                                }
-                            }
-                            if (brand1 != null)
-                            {
-                                ite.Editing.BeginEdit();
-                                ite["Finish"] = brand1;
-                                ite.Editing.EndEdit();
-                                if (brand1 == "")
-                                {
-
-                                }
-                            }
-
-                        }
-
-                        Sitecore.Data.Fields.MultilistField multiselectField4 = catalogue.Fields["Form"];
-
-                        Sitecore.Data.Items.Item[] items4 = multiselectField4.GetItems();
-                        if (items4 != null)
-                        {
-                            string brand1 = "";
-                            foreach (var it in items4)
-                            {
-                                var brand = database.GetItem(it.Paths.FullPath.Replace(taggingpath, site));
-                                if (brand != null)
-                                {
-                                    brand1 = brand1 + brand.ID.ToString() + "|";
-                                }
-                            }
-                            if (brand1 != null)
-                            {
-                                ite.Editing.BeginEdit();
-                                ite["Form"] = brand1;
-                                ite.Editing.EndEdit();
-                                if (brand1 == "")
-                                {
-
-                                }
-                            }
-
-                        }
-
-                        //string y = "fast:#" + catalogue.Paths.FullPath.Replace(taggingpath,site) + "#//*[@@TemplateID='{9D2C8EF7-602E-48C2-98E5-727E62C4464E}']";
-                        //var childcatalogue = database.SelectItems(y);
-
-
-
-
-
-                        var product = targetProduct.SingleOrDefault(x => x.Contains(site));
-
-                        if (product == null)
-                            Context.ClientPage.ClientResponse.Alert("Required Item Path does not exist");
-                        Sitecore.Data.Items.Item parent = masterDb.GetItem(product);
-                        if (parent != null)
-                        {
-
-
-
-
-                            var ite1 = source.CopyTo(parent, source.Name);
-                            Sitecore.Data.Fields.MultilistField multiselectField5 = ite1.Fields["Product"];
-
-                            Sitecore.Data.Items.Item[] items5 = multiselectField5.GetItems();
-                            if (items5 != null)
-                            {
-                                foreach (var it in items5)
-                                {
-
-                                    ite1.Editing.BeginEdit();
-                                    string p = catalogue.Paths.FullPath.Replace(taggingpath, site);
-                                    //     var pro = database.GetItem(p);
-                                    ite1["Product"] = ite.ID.ToString();
-                                    ite1.Editing.EndEdit();
-
-                                }
-
-                            }
-
-
-
-
-
-                        }
-                        foreach (Item child in ite.Children)
-                        {
-                            Sitecore.Data.Fields.MultilistField shades = child.Fields["ShadeFamily"];
-                            Sitecore.Data.Items.Item[] items5 = shades.GetItems();
-
-                            if (items5 != null)
-                            {
-                                string shade = "";
-
-                                foreach (var i in items5)
-                                {
-                                    var shadesite = database.GetItem(i.Paths.FullPath.Replace(taggingpath, site));
-                                    if (shadesite != null)
-                                    {
-                                        shade = shade + shadesite.ID.ToString() + "|";
-                                    }
-                                }
-                                if (shade != null)
-                                {
-                                    child.Editing.BeginEdit();
-                                    child["ShadeFamily"] = shade;
-                                    child.Editing.EndEdit();
-                                    if (shade == "")
-                                    {
-
-                                    }
-                                }
-
-
-
-
-
-
-
-                            }
-
-
-
-
-                            //Item parentItem = masterDb.Items[path];
-                            //TemplateItem template = source.Template;
-                            //parentItem.Add(source.Name, template);
-
-
-
-
-
-
-                        }
-                        //}
-
-                        /// catch (AggregateException ex)
-                        /// {
-                        ////   ex.Data.ToString();
-                        //// }
                     }
-                        //   }
+                               
+                        }
+                                ////// try
+                                ////// {
+                               
+                    
 
-
-
-
-
-
-
-
-                    }
-
-
+                
+            
 
 
 
@@ -627,9 +691,57 @@
                     target.Editing.EndEdit();
 
                     Sitecore.Diagnostics.Log.Debug("Smart Tools: AddVersionAndCopyItems-Completed.", this);
-                }
+             this.Email();
             }
+            }
+        private void Email()
+        {
+            //ItemPathListC = new List<string>();
+            //ItemPathListP = new List<string>();
+            try
+            {
+                MailMessage message = new MailMessage();
+                SmtpClient smtp = new SmtpClient("192.168.130.134", 29);
+                message.From = new MailAddress("mailapp@valtech.co.in");
+                //string s = Context.ClientPage.Request.Params.Get("email");
+
+                //message.To.Add(new MailAddress(s));             message.To.Add(new MailAddress("vasu.goyal@valtech.com"));
+                message.Subject = "Details for newly created items for your market";
+                message.IsBodyHtml = false;
+                //string ss=  Context.Database.GetItem("{B76E9B72-04D9-44A5-8885-64D7022E1AC2}");
+                //foreach (var i in ItemPathListC)
+                //{
+                //    ItemPathListC.Add(i);
+                //}
+                //message.Body = "Hello," + Environment.NewLine;
+                //message.Body += "Below are the ID's for newly created item:-" + Environment.NewLine;
+                //message.Body += "Product ID:- " + ItemPathListP + Environment.NewLine;
+                //message.Body += "Catalogue ID:- " + ItemPathListC + Environment.NewLine;
+                //message.Body += "Thank You" + Environment.NewLine;
+
+                message.Body.Replace("\r\n", "\n").Replace("\n", "<br />");
+
+                message.Body = Environment.NewLine + "Hello,\n";
+                message.Body += Environment.NewLine + "Below are the ID's for newly created item:-\n";
+                //   message.Body += Environment.NewLine + "Product ID:- " + ItemPathListP;
+                //    message.Body += Environment.NewLine + "Catalogue ID:- " + ItemPathListC + "\n";
+                message.Body += Environment.NewLine + "Thank You";
+
+                //smtp.Port = 587;
+                //smtp.Host = "smtp.gmail.com";              
+                smtp.EnableSsl = false;
+                smtp.UseDefaultCredentials = true;
+                //smtp.Credentials = new NetworkCredential("priyakhetarpal640@gmail.com", "password");
+                smtp.DeliveryMethod = SmtpDeliveryMethod.Network;
+                smtp.Send(message);
+            }
+            catch (Exception exception)
+            {
+                Sitecore.Diagnostics.Log.Error(exception.Message, this);
+            }
+           }
+
         }
-    }
+}
 
 
