@@ -25,3 +25,10 @@ C:\Users\Vasu.Goyal\Documents\Sitecore.SharedSource.SmartTools\obj\Debug\Sitecor
 C:\Users\Vasu.Goyal\Documents\Sitecore.SharedSource.SmartTools\obj\Debug\Sitecore.SharedSource.SmartTools.dll
 C:\Users\Vasu.Goyal\Documents\Sitecore.SharedSource.SmartTools\obj\Debug\Sitecore.SharedSource.SmartTools.pdb
 C:\Users\Vasu.Goyal\Documents\Sitecore.SharedSource.SmartTools\obj\Debug\Sitecore.SharedSource.SmartTools.csprojAssemblyReference.cache
+D:\SourceTreeFolder\Sitecore.SharedSource.SmartTools\bin\Sitecore.SharedSource.SmartTools.dll.config
+D:\SourceTreeFolder\Sitecore.SharedSource.SmartTools\bin\Sitecore.SharedSource.SmartTools.dll
+D:\SourceTreeFolder\Sitecore.SharedSource.SmartTools\bin\Sitecore.SharedSource.SmartTools.pdb
+D:\SourceTreeFolder\Sitecore.SharedSource.SmartTools\obj\Debug\Sitecore.SharedSource.SmartTools.csproj.CoreCompileInputs.cache
+D:\SourceTreeFolder\Sitecore.SharedSource.SmartTools\obj\Debug\Sitecore.SharedSource.SmartTools.csproj.CopyComplete
+D:\SourceTreeFolder\Sitecore.SharedSource.SmartTools\obj\Debug\Sitecore.SharedSource.SmartTools.dll
+D:\SourceTreeFolder\Sitecore.SharedSource.SmartTools\obj\Debug\Sitecore.SharedSource.SmartTools.pdb
