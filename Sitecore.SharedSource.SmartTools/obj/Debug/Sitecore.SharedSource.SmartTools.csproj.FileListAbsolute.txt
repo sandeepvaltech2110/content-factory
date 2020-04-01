@@ -32,4 +32,3 @@ D:\SourceTreeFolder\Sitecore.SharedSource.SmartTools\obj\Debug\Sitecore.SharedSo
 D:\SourceTreeFolder\Sitecore.SharedSource.SmartTools\obj\Debug\Sitecore.SharedSource.SmartTools.csproj.CopyComplete
 D:\SourceTreeFolder\Sitecore.SharedSource.SmartTools\obj\Debug\Sitecore.SharedSource.SmartTools.dll
 D:\SourceTreeFolder\Sitecore.SharedSource.SmartTools\obj\Debug\Sitecore.SharedSource.SmartTools.pdb
-D:\SourceTreeFolder\Sitecore.SharedSource.SmartTools\obj\Debug\Sitecore.SharedSource.SmartTools.csprojAssemblyReference.cache
