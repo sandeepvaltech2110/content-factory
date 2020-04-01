@@ -744,6 +744,10 @@ namespace Sitecore.SharedSource.SmartTools.Dialogs
 
                 message.Body.Replace("\r\n", "\n").Replace("\n", "<br />");
 
+
+
+
+
                 message.Body = Environment.NewLine + "Hello,\n";
                 message.Body += Environment.NewLine + "Below are the ID's and Path for newly created item for " + MarketNameList + ":-\n";
                 message.Body += Environment.NewLine + "Product ID:- " + ProductItemID;
