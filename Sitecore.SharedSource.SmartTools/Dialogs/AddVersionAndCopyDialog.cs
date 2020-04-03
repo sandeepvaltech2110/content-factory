@@ -1,8 +1,4 @@
-﻿
-
-
-
-namespace Sitecore.SharedSource.SmartTools.Dialogs
+﻿namespace Sitecore.SharedSource.SmartTools.Dialogs
 {
     using Microsoft.ApplicationBlocks.Data;
     using Sitecore;
@@ -51,12 +47,13 @@ namespace Sitecore.SharedSource.SmartTools.Dialogs
         protected Web.UI.HtmlControls.Literal TargetSites;
         protected Web.UI.HtmlControls.Literal TargetPath;
         protected Web.UI.HtmlControls.Literal TargetCatalogue;
-
+        protected Web.UI.HtmlControls.Literal TargetMedia;
         protected TreeList TreeListOfItems;
         protected List<Language> targetLanguagesList;
         protected List<string> targetSiteList;
         protected List<string> ProductPathList;
         protected List<string> CataloguePathList;
+        protected List<string> MediaPathList;
         protected string ProductItemID;
         protected string CatalogueItemID;
         //protected string ProductItemPath;
@@ -78,8 +75,9 @@ namespace Sitecore.SharedSource.SmartTools.Dialogs
         protected string ProductItemPath;
         protected string CatalogueItemPath;
         protected string msg;
+        protected string eml;
 
-       
+
 
 
         private void fillLanguageDictionary()
@@ -113,12 +111,13 @@ namespace Sitecore.SharedSource.SmartTools.Dialogs
             {
                 this.Site.Add(i.Name);
             }
+
             foreach (var i in allItems)
             {
-                string taggingpath = itemFromQueryString.Parent.Parent.Parent.Parent.Paths.FullPath.ToString().Remove(0, 22);
-                if (taggingpath == i.Name)
+                if (itemFromQueryString.Paths.FullPath.ToString().Contains(i.Name))
                 {
-                    this.Site.Remove(taggingpath);
+
+                    this.Site.Remove(i.Name);
                 }
             }
 
@@ -146,7 +145,7 @@ namespace Sitecore.SharedSource.SmartTools.Dialogs
                         throw new Exception();
 
 
-                    
+
 
                     string str = "<script type='text/javascript'>function toggleChkBoxMethod2(formName){var form=$(formName);var i=form.getElements('checkbox'); i.each(function(item){item.checked = !item.checked;});$('togglechkbox').checked = !$('togglechkbox').checked;}</script>";
                     str = str + "<table>";
@@ -154,7 +153,7 @@ namespace Sitecore.SharedSource.SmartTools.Dialogs
                     this.fillSiteDictionary();
                     foreach (KeyValuePair<string, string> pair in this.langNames)
                     {
-                        
+
                     }
 
 
@@ -162,24 +161,36 @@ namespace Sitecore.SharedSource.SmartTools.Dialogs
                     ////this.TargetLanguages.Text = str;
                     if (itemFromQueryString != null)
                     {
-                      
+
                         foreach (var site in this.Site)
                         {
-                            string str2 = "chk_"+" "+" " + site;                                                        str = str + "<div>" + site + " " + "<input class='reviewerCheckbox' type='checkbox' value='1' name='" + str2 + "'/> </div>";                            str = str + "<div> Product Path:" + "<input type='textbox' id='Product" + site + "'/> </div>";                            str = str + "<div> Catalog Path:" + "<input type='textbox' id='Catalog" + site + "'/> </div>";
+                            string str2 = "chk_" + site;
+
+                            str = str + "<div>" + site + " " + "<input class='reviewerCheckbox' type='checkbox' value='1' name='" + str2 + "'/> </div>";
+                            str = str + "<div> Product Path:" + "<input type='textbox' id='Product" + site + "'/> </div>";
+                            str = str + "<div> Catalog Path:" + "<input type='textbox' id='Catalog" + site + "'/> </div>";
+                            str = str + "<div> Media Path:" + "<input type='textbox' id='Media" + site + "'/> </div>";
                             str = str + "<style >#TranslateCustom_Reviewer div:nth-child(odd) {background: #f1e7e7;padding: 10px;}#TranslateCustom_Reviewer div:nth-child(even) {background: #CCC;padding: 10px;}#TranslateCustom_Reviewer input[type=‘text’], #Group_Options input[type=‘text’], #TranslateCustom_Reviewer  input[type=‘password’], #TranslateCustom_Reviewer  select, #TranslateCustom_Reviewer  textarea {-moz-box-sizing: border-box;box-sizing: border-box;display: inline-block;width: 65%;min-height: 34px;padding: 8px 12px;font-size: 12px;line-height: 1.42857143;color: #474747;background-color: #ffffff;background-image: none;border: 1px solid #cccccc;border-radius: 2px;box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;font-family: Arial, Helvetica, sans-serif;margin: 0 0 0 10px;}</style>";
 
 
 
-                         }
+                        }
                         this.TargetLanguages.Text = str;
                     }
 
+                    str = "";
+                    str += "<table>";
+                    str += "<tr><td>Email:</td><td><input type='textbox' id='email'/></td></tr>";
+                    //str += "<tr><td>Include SubItems:</td><td><input class='optionsCheckbox' type='checkbox' value='1' name='chk_IncludeSubItems'/></td></tr>";
+                    str += "</table>";
+                    this.Options.Text = str;
+
 
                     //Options
-                    str = "";
-                    str += "<tr><td>Email:</td><td><input type='textbox' id='email'/></td></tr>";
-                    
-                    this.Options.Text = str;
+                    //str = "";
+                    //str += eml ="<tr><td>Email:</td><td><input type='textbox' id='email'/></td></tr>";
+
+                    //this.Options.Text = str;
                 }
             }
             catch (Exception exception)
@@ -194,14 +205,16 @@ namespace Sitecore.SharedSource.SmartTools.Dialogs
             Item itemFromQueryString = UIUtil.GetItemFromQueryString(Context.ContentDatabase);
             this.fillLanguageDictionary();
             this.fillSiteDictionary();
+            //this.Email();
             targetLanguagesList = new List<Language>();
             targetSiteList = new List<string>();
             ProductPathList = new List<string>();
             CataloguePathList = new List<string>();
-        
+            MediaPathList = new List<string>();
+
             try
             {
-              
+
                 //Get the source language
                 if (itemFromQueryString == null)
                     throw new Exception();
@@ -224,14 +237,16 @@ namespace Sitecore.SharedSource.SmartTools.Dialogs
                         targetSiteList.Add(site);
                         string s = Context.ClientPage.Request.Params.Get("Product" + site + "").Replace(",", "");
                         string s1 = Context.ClientPage.Request.Params.Get("Catalog" + site + "").Replace(",", "");
+                        string s2 = Context.ClientPage.Request.Params.Get("Media" + site + "").Replace(",", "");
                         ProductPathList.Add(s);
                         CataloguePathList.Add(s1);
+                        MediaPathList.Add(s2);
 
 
                     }
                 }
 
-
+                eml = Context.ClientPage.Request.Params.Get("email");
                 //Include SubItems?
                 if (!string.IsNullOrEmpty(Context.ClientPage.Request.Params.Get("chk_IncludeSubItems")))
                 {
@@ -244,7 +259,7 @@ namespace Sitecore.SharedSource.SmartTools.Dialogs
                 {
                     //Execute the Job
                     Sitecore.Shell.Applications.Dialogs.ProgressBoxes.ProgressBox.Execute("Add Version and Copy", "Smart Tools", new ProgressBoxMethod(ExecuteOperation), itemFromQueryString);
-                 
+
 
                 }
                 else
@@ -253,7 +268,7 @@ namespace Sitecore.SharedSource.SmartTools.Dialogs
                     Context.ClientPage.ClientResponse.Alert("Context Item or Target Paths are empty.");
                     Context.ClientPage.ClientResponse.CloseWindow();
                 }
-                Context.ClientPage.ClientResponse.Alert("This process has been completed");
+                Context.ClientPage.ClientResponse.Alert("hii " + "\n" + msg);
                 Context.ClientPage.ClientResponse.CloseWindow();
             }
             catch (Exception exception8)
@@ -273,29 +288,29 @@ namespace Sitecore.SharedSource.SmartTools.Dialogs
                 return;
 
             Item item = (Item)parameters[0];
-        
-            IterateItems(item, targetSiteList, ProductPathList, CataloguePathList, sourceLanguage);
+
+            IterateItems(item, targetSiteList,MediaPathList, ProductPathList, CataloguePathList, sourceLanguage);
         }
 
-        
-        private void IterateItems(Item item, List<string> targetSites, List<string> targetProduct, List<string> targetCatalogue, Language sourceLang)
+
+        private void IterateItems(Item item, List<string> targetSites,List<string>targetMedia, List<string> targetProduct, List<string> targetCatalogue, Language sourceLang)
         {
-           AddVersionAndCopyItems(item, targetSites, targetProduct, targetCatalogue, sourceLang);
-           
+            AddVersionAndCopyItems(item, targetSites,targetMedia, targetProduct, targetCatalogue, sourceLang);
+
             if (CopySubItems && item.HasChildren)
             {
                 foreach (Item childItem in item.Children)
                 {
-                    IterateItems(childItem, targetSites, targetProduct, targetCatalogue, sourceLang);
+                    IterateItems(childItem, targetSites,targetMedia,targetProduct, targetCatalogue, sourceLang);
 
                 }
             }
         }
 
-      
-        private void AddVersionAndCopyItems(Item item, List<string> targetSites, List<string> targetProduct, List<string> targetCatalogue, Language sourceLang)
+
+        private void AddVersionAndCopyItems(Item item, List<string> targetSites,List<string> targetMedia, List<string> targetProduct, List<string> targetCatalogue, Language sourceLang)
         {
-           
+
             foreach (var site in targetSites)
             {
                 Item source = Context.ContentDatabase.GetItem(item.ID, sourceLang);
@@ -303,7 +318,12 @@ namespace Sitecore.SharedSource.SmartTools.Dialogs
                 if (language != null)
                 {//For checking whether the source item has a version in that source language or not.
                     var languagespecific = Context.ContentDatabase.GetItem(source.ID, language);
-                    if(languagespecific!=null && languagespecific.Versions.Count > 0)
+                    if (languagespecific.Versions.Count <= 0 || languagespecific.TemplateID.ToString() != ("{B76E9B72-04D9-44A5-8885-64D7022E1AC2}"))
+                    {
+                        msg = msg + "Source Item version does not exist or Source Item is not elligible.";
+                    }
+                    if (languagespecific != null && languagespecific.Versions.Count > 0 && languagespecific.TemplateID.ToString().Contains("{B76E9B72-04D9-44A5-8885-64D7022E1AC2}"))
+
                     {
                         string path = source.Parent.Parent.Parent.Parent.Paths.FullPath.ToString().Remove(0, 36);
                         string taggingpath = source.Parent.Parent.Parent.Parent.Paths.FullPath.ToString().Remove(0, 22);
@@ -312,14 +332,14 @@ namespace Sitecore.SharedSource.SmartTools.Dialogs
                         string name = site.ToString().Remove(0, 14).Replace("_", "-");
                         MarketNameList = site.ToString();
                         var catalogue = database.GetItem(source["Product"]);
-                      
+
 
                         Database masterDb = Sitecore.Configuration.Factory.GetDatabase("master");
-                       //Conditions checked for the path provided
+                        //Conditions checked for the path provided
                         var catalogue1 = targetCatalogue.SingleOrDefault(x => x.Contains(site));
 
                         if (catalogue1 == null)
-                     catalogue1="Required Path does not exist";
+                            catalogue1 = "Required Path does not exist";
 
                         Sitecore.Data.Items.Item parent1 = masterDb.GetItem(catalogue1);
                         if (parent1 == null)
@@ -334,28 +354,28 @@ namespace Sitecore.SharedSource.SmartTools.Dialogs
                         {
                             string catalogname = "";
                             using (new LanguageSwitcher(lang))
-                            { 
+                            {
                                 foreach (Item ctname in parent1.Children)
                                 {
                                     if (ctname.Name == catalogue.Name)
                                     {
                                         catalogname = ctname.Name;
-                                        CatalogueItemName = ctname.Name.ToString() + "  already exist under "+""+parent1.Paths.FullPath+", if you want to create again then you have to delete it first.";
-                                        msg = msg + CatalogueItemName + Environment.NewLine; 
+                                        CatalogueItemName = ctname.Name.ToString() + "  already exist under " + "" + parent1.Paths.FullPath + ", if you want to create again then you have to delete it first.";
+                                        msg = msg + CatalogueItemName + Environment.NewLine;
                                     }
 
                                 }
                                 //For creating new catalogue
                                 if (catalogname == "")
-                               
+
                                 {
                                     var ite = catalogue.CopyTo(parent1, catalogue.Name);
                                     CatalogueItemID = ite.ID.ToString();
                                     ItemName = ite.Name.ToString();
-                                    msg =msg+ "Details of the newly created Catalogue for" + site;
-                                    msg = msg+"CatalogueID:-" + CatalogueItemID+Environment.NewLine+"CataloguePath:-"+parent1.Paths.FullPath+Environment.NewLine+"CatalogueName:-"+ItemName+Environment.NewLine;
+                                    msg = msg + "Details of the newly created Catalogue for" + site;
+                                    msg = msg + "CatalogueID:-" + CatalogueItemID + Environment.NewLine + "CataloguePath:-" + parent1.Paths.FullPath + Environment.NewLine + "CatalogueName:-" + ItemName + Environment.NewLine;
                                     msg = msg + Environment.NewLine;
-                                   
+
                                     //For tagging in newly created Catalogue
                                     Sitecore.Data.Fields.MultilistField multiselectField = catalogue.Fields["Brand"];
 
@@ -386,7 +406,7 @@ namespace Sitecore.SharedSource.SmartTools.Dialogs
                                         if (count != result)
                                         {
                                             BrandField = "Brand Field, ";
-                                            msg = msg +"Please update these fields manually"+Environment.NewLine;
+                                            msg = msg + "Please update these fields manually" + Environment.NewLine;
                                             msg = msg + BrandField;
                                         }
 
@@ -420,7 +440,7 @@ namespace Sitecore.SharedSource.SmartTools.Dialogs
                                         {
                                             BenefitField = "Benefit Field, ";
 
-                                            msg=msg+BenefitField;
+                                            msg = msg + BenefitField;
                                         }
                                     }
 
@@ -452,7 +472,7 @@ namespace Sitecore.SharedSource.SmartTools.Dialogs
                                         if (count != result)
                                         {
                                             CoverageField = "Coverage Field, ";
-                                            msg=msg+CoverageField;
+                                            msg = msg + CoverageField;
                                         }
 
 
@@ -490,7 +510,7 @@ namespace Sitecore.SharedSource.SmartTools.Dialogs
                                         if (count != result)
                                         {
                                             FinishField = "Finish Field, ";
-                                            msg=msg+FinishField; 
+                                            msg = msg + FinishField;
                                         }
 
                                     }
@@ -521,20 +541,20 @@ namespace Sitecore.SharedSource.SmartTools.Dialogs
                                         if (count != result)
                                         {
                                             FormField = "Form Field, ";
-                                            msg=msg+FormField + Environment.NewLine;
+                                            msg = msg + FormField + Environment.NewLine;
                                         }
 
                                     }
 
-                                  
+
 
 
                                     //For checking Path provided and if it exist or not
 
-                                        var product = targetProduct.SingleOrDefault(x => x.Contains(site));
+                                    var product = targetProduct.SingleOrDefault(x => x.Contains(site));
 
                                     if (product == null)
-                                       product= "Required Item Path does not exist";
+                                        product = "Required Item Path does not exist";
                                     Sitecore.Data.Items.Item parent = masterDb.GetItem(product);
                                     if (parent == null)
                                     {
@@ -549,19 +569,19 @@ namespace Sitecore.SharedSource.SmartTools.Dialogs
                                             {
                                                 productname = "";
                                                 ProductItemName = ptname.Name.ToString() + " is already exist under product, if you want to create again then you have to delete it first.";
-                                                msg=msg+ProductItemName + Environment.NewLine;
+                                                msg = msg + ProductItemName + Environment.NewLine;
                                             }
-                                         
+
                                         }
 
 
                                         //For creation of new Product
                                         if (productname == "")
                                         {
-                                            StatusLine2 = "Details for newly created product for " + site + ":-"+ Environment.NewLine;
+                                            StatusLine2 = "Details for newly created product for " + site + ":-" + Environment.NewLine;
                                             msg = msg + StatusLine2 + Environment.NewLine;
                                             var ite1 = source.CopyTo(parent, source.Name);
-                                            msg = msg+"ProductID:-" + ite1.ID.ToString() +Environment.NewLine+ "ProductPath:-" + parent.Paths.FullPath  +Environment.NewLine + " ProductName:-" + ite1.Name + Environment.NewLine;
+                                            msg = msg + "ProductID:-" + ite1.ID.ToString() + Environment.NewLine + "ProductPath:-" + parent.Paths.FullPath + Environment.NewLine + " ProductName:-" + ite1.Name + Environment.NewLine;
                                             Sitecore.Data.Fields.MultilistField multiselectField5 = ite1.Fields["Product"];
 
                                             Sitecore.Data.Items.Item[] items5 = multiselectField5.GetItems();
@@ -571,13 +591,13 @@ namespace Sitecore.SharedSource.SmartTools.Dialogs
                                                 {
 
                                                     ite1.Editing.BeginEdit();
-                                                   
-                                                  
+
+
                                                     ite1["Product"] = ite.ID.ToString();
                                                     ite1.Editing.EndEdit();
 
                                                 }
-                                              
+
                                             }
 
                                             if (site == "Maybelline_V3_zh_HK")
@@ -637,13 +657,13 @@ namespace Sitecore.SharedSource.SmartTools.Dialogs
                                         }
 
 
-                                       
+
 
 
 
 
                                     }
-                                    msg = msg +"Please update "+ ShadeFamilyField +"manually"+ Environment.NewLine;
+                                    msg = msg + "Please update " + ShadeFamilyField + "manually" + Environment.NewLine;
                                     StatusLine1 = "Also update Data-source for the used renderings.";
                                     msg = msg + StatusLine1 + Environment.NewLine;
 
@@ -651,32 +671,32 @@ namespace Sitecore.SharedSource.SmartTools.Dialogs
                                     {
                                         ite.Versions.AddVersion();
                                         RenderingReference[] renderings = this.GetListOfSublayouts(ite.ID.ToString());
-                                        List<string> ListOfDataSource =this.GetListOfDataSource(renderings);
+                                        List<string> ListOfDataSource = this.GetListOfDataSource(renderings);
 
                                     }
 
 
 
 
-                                                                           }
-                               
-                             
+                                }
 
 
-                               
+
+
+
                             }
                         }
-                        
+
 
 
                         if (source == null || target == null) return;
 
                         Sitecore.Diagnostics.Log.Debug("Smart Tools: AddVersionAndCopyItems-SourcePath-" + source.Paths.Path, this);
                         Sitecore.Diagnostics.Log.Debug("Smart Tools: AddVersionAndCopyItemsSourceLanguage-" + sourceLang.Name, this);
-                
+
 
                         source = source.Versions.GetLatestVersion();
-                
+
 
 
 
@@ -695,7 +715,7 @@ namespace Sitecore.SharedSource.SmartTools.Dialogs
 
 
                     }
-                   
+
 
 
 
@@ -712,34 +732,45 @@ namespace Sitecore.SharedSource.SmartTools.Dialogs
 
 
 
-           
+
             }
             this.Email();
         }
         private void Email()
         {
-           
+
             try
             {
-                MailMessage message = new MailMessage();
-                SmtpClient smtp = new SmtpClient("192.168.130.134", 29);
-                message.From = new MailAddress("mailapp@valtech.co.in");
-                 message.To.Add(new MailAddress("vasu.goyal@valtech.com"));
-                message.Subject = "Details for newly created items for your market";
-                message.IsBodyHtml = false;
-                message.Body.Replace("\r\n", "\n").Replace("\n", "<br />");
-               message.Body = Environment.NewLine + "Hello,\n";
-                message.Body = message.Body + msg;                
-              
-              
-                message.Body += Environment.NewLine + "Thank You!!";
+                if (eml != "")
+                {
+                    MailMessage message = new MailMessage();
+                    SmtpClient smtp = new SmtpClient("192.168.130.134", 29);
+                    message.From = new MailAddress("mailapp@valtech.co.in");
 
-              
-                smtp.EnableSsl = false;
-                smtp.UseDefaultCredentials = true;
-               
-                smtp.DeliveryMethod = SmtpDeliveryMethod.Network;
-                smtp.Send(message);
+                    message.To.Add(new MailAddress(eml));
+
+                    //message.To.Add(new MailAddress("priyanka.khetarpal@valtech.com"));
+                    message.Subject = "Details for newly created items for your market";
+                    message.IsBodyHtml = false;
+                    message.Body.Replace("\r\n", "\n").Replace("\n", "<br />");
+                    message.Body = Environment.NewLine + "Hello,\n";
+                    message.Body = message.Body + msg;
+
+
+                    message.Body += Environment.NewLine + "Thank You!!";
+                    smtp.EnableSsl = false;
+                    smtp.UseDefaultCredentials = true;
+
+                    smtp.DeliveryMethod = SmtpDeliveryMethod.Network;
+                    smtp.Send(message);
+                }
+
+                else
+                {
+
+                }
+
+
             }
             catch (Exception exception)
             {
@@ -760,11 +791,11 @@ namespace Sitecore.SharedSource.SmartTools.Dialogs
 
                     var layoutField = new Data.Fields.LayoutField(item);
                     LayoutDefinition layoutDef = LayoutDefinition.Parse(layoutField.Value);
-                DeviceItem device  =database.Resources.Devices["Default"];
+                    DeviceItem device = database.Resources.Devices["Default"];
                     DeviceDefinition deviceDef = layoutDef.GetDevice(device.ID.ToString());
-                    renderings = item.Visualization.GetRenderings(device,true);
-                  var x=  deviceDef.Renderings;
-               
+                    renderings = item.Visualization.GetRenderings(device, true);
+                    var x = deviceDef.Renderings;
+
                 }
             }
             return renderings;
