@@ -1,39 +1,24 @@
 ﻿namespace Sitecore.SharedSource.SmartTools.Dialogs
 {
-    using Microsoft.ApplicationBlocks.Data;
     using Sitecore;
-    using Sitecore.Configuration;
+    using Sitecore.Collections;
     using Sitecore.Data;
     using Sitecore.Data.Fields;
     using Sitecore.Data.Items;
     using Sitecore.Data.Managers;
     using Sitecore.Diagnostics;
+    using Sitecore.Globalization;
+    using Sitecore.Layouts;
     using Sitecore.Shell.Applications.ContentEditor;
+    using Sitecore.Shell.Applications.Dialogs.ProgressBoxes;
     using Sitecore.Web.UI.HtmlControls;
     using Sitecore.Web.UI.Pages;
-    using Sitecore.Web.UI.Sheer;
     using System;
-    using System.Collections;
     using System.Collections.Generic;
-    using System.Configuration;
     using System.Data;
-    using System.Data.SqlClient;
     using System.Globalization;
-    using System.IO;
-    using System.Xml;
-    using Sitecore.Collections;
-    using Sitecore.Globalization;
-    using Sitecore.SecurityModel;
-    using Sitecore.Shell.Applications.Dialogs.ProgressBoxes;
-    using Sitecore.Sites;
-    using static Sitecore.Configuration.Settings;
-    using static Sitecore.Configuration.State;
     using System.Linq;
-    using System.Web.UI.WebControls;
-    using Sitecore.Resources.Media;
-    using Sitecore.Web;
     using System.Net.Mail;
-    using Sitecore.Layouts;
 
     public class AddVersionAndCopyDialog : DialogForm
     {
@@ -470,8 +455,6 @@
                                             ite.Editing.BeginEdit();
                                             ite["Coverage"] = brand1;
                                             ite.Editing.EndEdit();
-
-
                                         }
                                         int count = brand1.Split('|').Length - 2;
                                         int result = items2.GetLength(0);
@@ -480,10 +463,6 @@
                                             CoverageField = "Coverage Field, ";
                                             msg = msg + CoverageField;
                                         }
-
-
-
-
                                     }
 
                                     Sitecore.Data.Fields.MultilistField multiselectField3 = catalogue.Fields["Finish"];
@@ -605,7 +584,6 @@
                                                     ite1.Editing.EndEdit();
 
                                                 }
-
                                             }
 
                                             if (site == "Maybelline_V3_zh_HK")
@@ -718,7 +696,6 @@
                                                 child.Editing.BeginEdit();
                                                 child["ShadeFamily"] = shade;
                                                 child.Editing.EndEdit();
-
                                             }
 
 
@@ -727,19 +704,8 @@
                                             if (count != result)
                                             {
                                                 ShadeFamilyField = "ShadeFamily Field, ";
-
-
                                             }
-
-
                                         }
-
-
-
-
-
-
-
                                     }
                                     msg = msg + "Please update " + ShadeFamilyField + "manually" + Environment.NewLine;
                                     StatusLine1 = "Also update Data-source for the used renderings.";
@@ -765,16 +731,8 @@
 
 
                                 }
-
-
-
-
-
                             }
                         }
-
-
-
                         if (source == null || target == null) return;
 
                         Sitecore.Diagnostics.Log.Debug("Smart Tools: AddVersionAndCopyItems-SourcePath-" + source.Paths.Path, this);
@@ -782,10 +740,6 @@
 
 
                         source = source.Versions.GetLatestVersion();
-
-
-
-
                         target.Editing.BeginEdit();
 
                         source.Fields.ReadAll();
@@ -801,24 +755,7 @@
 
 
                     }
-
-
-
-
-
-
-
-
                 }
-
-
-
-
-
-
-
-
-
             }
             this.Email();
         }
@@ -855,8 +792,6 @@
                 {
 
                 }
-
-
             }
             catch (Exception exception)
             {
