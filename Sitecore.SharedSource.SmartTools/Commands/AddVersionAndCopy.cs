@@ -5,6 +5,7 @@
     using Sitecore.Data.Items;
     using Sitecore.Diagnostics;
     using Sitecore.Globalization;
+    using Sitecore.Jobs;
     using Sitecore.Shell.Framework.Commands;
     using Sitecore.Text;
     using Sitecore.Web.UI.Sheer;
@@ -12,6 +13,7 @@
     using System;
     using System.Collections.Specialized;
     using System.Globalization;
+    using System.Linq;
 
     [Serializable]
     public class AddVersionAndCopy : Command
@@ -30,10 +32,11 @@
                     parameters["id"] = item2.ID.ToString();
                     parameters["language"] = item2.Language.ToString();
                     parameters["version"] = item2.Version.ToString();
-                    
+
                     IWorkflow workflow = item2.Database.WorkflowProvider.GetWorkflow(item2);
                     Context.ClientPage.Start(this, "Run", parameters);
                 }
+
             }
             catch (Exception exception)
             {
@@ -79,6 +82,14 @@
                         if (args.Result == "yes")
                         {
                             Context.ClientPage.SendMessage(this, "item:load(id=" + str + ",language=" + name + ",version=" + str3 + ")");
+                            UrlString str4 = new UrlString(UIUtil.GetUri("control:AddVersionAndCopy"));
+                            str4.Add("id", item.ID.ToString());
+                            str4.Add("la", item.Language.ToString());
+                            str4.Add("vs", item.Version.ToString());
+                            str4.Add("ci", item.Language.ToString());
+                            SheerResponse.ShowModalDialog(str4.ToString(),"this is for testing");
+                           
+
                         }
                     }
                     else
@@ -89,6 +100,16 @@
                         str4.Add("vs", item.Version.ToString());
                         str4.Add("ci", item.Language.ToString());
                         SheerResponse.ShowModalDialog(str4.ToString(), true);
+                        var isJobDone = JobManager.GetJobs().FirstOrDefault(j => j.Name.Equals("Add Version and Copy") && j.Status.State == JobState.Running);
+
+                        if (isJobDone != null && !isJobDone.IsDone)
+                        {
+                            SheerResponse.Timer("PublishApi:checkStatus", 100);
+                        }
+                        else
+                        {
+                            Context.ClientPage.ClientResponse.Alert("The process has been completed");
+                        }
                         args.WaitForPostBack();
                     }
                 }

@@ -1,4 +1,10 @@
-﻿namespace Sitecore.SharedSource.SmartTools.Dialogs
+﻿using Sitecore.Jobs;
+using Sitecore.Shell.Framework.Commands;
+using Sitecore.Web.UI.Sheer;
+using System.Linq;
+using System.Runtime.Remoting.Contexts;
+
+namespace Sitecore.SharedSource.SmartTools.Dialogs
 {
     using Sitecore;
     using Sitecore.Collections;
@@ -19,9 +25,11 @@
     using System.Globalization;
     using System.Linq;
     using System.Net.Mail;
+    
 
     public class AddVersionAndCopyDialog : DialogForm
     {
+    
         protected Language sourceLanguage;
         protected bool CopySubItems;
         protected List<string> Site;
@@ -244,7 +252,7 @@
                 {
                     //Execute the Job
                     Sitecore.Shell.Applications.Dialogs.ProgressBoxes.ProgressBox.Execute("Add Version and Copy", "Smart Tools", new ProgressBoxMethod(ExecuteOperation), itemFromQueryString);
-
+        
 
                 }
                 else
@@ -253,6 +261,7 @@
                     Context.ClientPage.ClientResponse.Alert("Context Item or Target Paths are empty.");
                     Context.ClientPage.ClientResponse.CloseWindow();
                 }
+                
                 Context.ClientPage.ClientResponse.Alert("hii " + "\n" + msg);
                 Context.ClientPage.ClientResponse.CloseWindow();
             }
@@ -275,13 +284,12 @@
             Item item = (Item)parameters[0];
 
             IterateItems(item, targetSiteList, MediaPathList, ProductPathList, CataloguePathList, sourceLanguage);
+           
 
-            if (Sitecore.Context.Job.IsDone)
-            {
-                //On completing the job
-                Context.ClientPage.ClientResponse.Alert("hiiiiii " + "\n" + msg);
-            }
-        }
+       }
+        
+
+
 
 
         private void IterateItems(Item item, List<string> targetSites, List<string> targetMedia, List<string> targetProduct, List<string> targetCatalogue, Language sourceLang)
@@ -588,37 +596,31 @@
 
                                             if (site == "Maybelline_V3_zh_HK")
                                             {
-                                                using (new LanguageSwitcher("en-HK"))
-                                                {
-                                                    var ctn = ite.Versions.AddVersion();
-                                                    var ptn = ite1.Versions.AddVersion();
-                                                }
-                                            }
+                                                Language forhkproduct = Sitecore.Globalization.Language.Parse("en-HK");
 
-                                            var catalogueitem = database.GetItem(ite.ID, lang);
+                                                                                             var producthk = database.GetItem(ite1.ID, forhkproduct);
+                                                if(producthk.Versions.Count < 1)
+                                                { 
+                                                    ite1.Versions.AddVersion();
+                                                }
+                                             }
+                                           
+
+                                          
                                             var productitem = database.GetItem(ite1.ID, lang);
-                                            if (catalogueitem.Versions.Count < 1)
-                                            {
-                                                catalogueitem.Versions.AddVersion();
-                                            }
-                                            if (productitem.Versions.Count < 1)
+                                           if (productitem.Versions.Count < 1)
                                             {
                                                 productitem.Versions.AddVersion();
                                             }
-                                            var cataloguesource = database.GetItem(ite.ID, sourceLang);
+                                     
                                             var productsource = database.GetItem(ite1.ID, sourceLang);
-                                            for (int i = 0; i < cataloguesource.Versions.Count;)
-                                            {
-                                                if (cataloguesource.Versions.Count > 0)
-                                                {
-                                                    cataloguesource.Versions.RemoveVersion();
-                                                }
-                                                if (productsource.Versions.Count > 0)
+                                           
+                                               if (productsource.Versions.Count > 0)
                                                 {
                                                     productsource.Versions.RemoveVersion();
                                                 }
 
-                                            }
+                                            
                                         }
 
                                     }
@@ -710,23 +712,60 @@
                                     msg = msg + "Please update " + ShadeFamilyField + "manually" + Environment.NewLine;
                                     StatusLine1 = "Also update Data-source for the used renderings.";
                                     msg = msg + StatusLine1 + Environment.NewLine;
-
-                                    using (new LanguageSwitcher(lang))
+                                    foreach (Item child in ite.Children)
                                     {
-                                        ite.Versions.AddVersion();
+                                        var childitem = database.GetItem(child.ID, lang);
+                                        if (childitem.Versions.Count < 1)
+                                        {
+                                            childitem.Versions.AddVersion();
+                                        }
+                                     //   var sourcechild = database.GetItem(child.ID, sourceLang);
+                                       // if (sourcechild.Versions.Count > 0)
+                                        //{
+                                          //  childitem.Versions.RemoveVersion();
+                                        //}
+                                    }
+                                    var catalogueitem = database.GetItem(ite.ID, lang);
+                                    if (catalogueitem.Versions.Count < 1)
+                                    {
+                                        catalogueitem.Versions.AddVersion();
+                                    }
+                                    var cataloguesource = database.GetItem(ite.ID, sourceLang);
+                                    if (cataloguesource.Versions.Count > 0)
+                                    {
+                                        cataloguesource.Versions.RemoveVersion();
+                                    }
+                                    
+                                    if (site == "Maybelline_V3_zh_HK")
+                                    {
+                                        Language forhk = Sitecore.Globalization.Language.Parse("en-HK");
+                                        var cataloguehk = database.GetItem(ite.ID, forhk);
+                                        if (cataloguehk.Versions.Count < 1)
+                                        {
+                                            ite.Versions.AddVersion();
+                                        }
+                                        var sourcecatalogue = database.GetItem(ite.ID, sourceLang);
+                                        if (sourcecatalogue.Versions.Count > 0)
+                                        {
+                                            ite.Versions.RemoveVersion();
+                                        }
+                                        foreach (Item child in ite.Children)
+                                        {
+                                            var childitem = database.GetItem(child.ID, forhk);
+                                            if (childitem.Versions.Count < 1)
+                                            {
+                                                childitem.Versions.AddVersion();
+                                            }
+                                                                               }
 
+                                    }
+
+                              
+                                      
                                         RenderingReference[] renderings = this.GetListOfSublayouts(producPageItem.ID.ToString());
                                         List<string> ListOfDataSource1 = this.GetListOfDataSource(renderings);
-                                        foreach (var datasource in ListOfDataSource1)
-                                        {
-                                            msg = msg + datasource + Environment.NewLine;
-
-                                        }
-                                    }
-                                    using (new LanguageSwitcher(sourceLang))
-                                    {
-                                        ite.Versions.RemoveVersion();
-                                    }
+                                        
+                                  
 
 
 
@@ -757,10 +796,12 @@
                     }
                 }
             }
+            
             this.Email();
         }
         private void Email()
         {
+            
 
             try
             {
@@ -786,6 +827,7 @@
 
                     smtp.DeliveryMethod = SmtpDeliveryMethod.Network;
                     smtp.Send(message);
+                    
                 }
 
                 else
@@ -799,7 +841,7 @@
             }
 
         }
-        public RenderingReference[] GetListOfSublayouts(string itemId)
+              public RenderingReference[] GetListOfSublayouts(string itemId)
         {
             Database database = Context.ContentDatabase;
 
@@ -809,10 +851,8 @@
                 Item item = Context.ContentDatabase.GetItem(Sitecore.Data.ID.Parse(itemId));
                 if (item != null)
                 {
-
                     var layoutField = new Data.Fields.LayoutField(item.Fields[Sitecore.FieldIDs.FinalLayoutField]);
-
-
+                    //    var layoutField = new Data.Fields.LayoutField(item);
                     LayoutDefinition layoutDef = LayoutDefinition.Parse(layoutField.Value);
                     DeviceItem device = database.Resources.Devices["Default"];
                     DeviceDefinition deviceDef = layoutDef.GetDevice(device.ID.ToString());
@@ -823,26 +863,22 @@
             }
             return renderings;
         }
+
+
         public List<string> GetListOfDataSource(RenderingReference[] renderings)
-        {
-            List<string> ListOfDataSource = new List<string>();
-            List<string> ListOfDataSource1 = new List<string>();
-            foreach (RenderingReference rendering in renderings)
             {
-                ListOfDataSource.Add(rendering.Settings.DataSource);
-                foreach (string list in ListOfDataSource)
+                List<string> ListOfDataSource = new List<string>();
+                foreach (RenderingReference rendering in renderings)
                 {
-                    if (list != "")
-                    {
-                        ListOfDataSource1.Add("DataSource ID: " + list + " Rendering ID: " + rendering.RenderingID.ToString() + Sitecore.Context.Database.GetItem(rendering.RenderingID.ToString()).Name + " PlaceHolder Name: " + rendering.Placeholder.ToString() + "\n");
-                    }
+                    ListOfDataSource.Add(rendering.Settings.DataSource);
                 }
+                return ListOfDataSource;
             }
-            return ListOfDataSource1;
-        }
+        
 
     }
 }
+
 //ite= stores the newly created catalogue
 //ite1=stores the newly created Product
 //brand1 stores all the tagging which are to be added
