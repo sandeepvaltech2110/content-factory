@@ -598,7 +598,7 @@ namespace Sitecore.SharedSource.SmartTools.Dialogs
                                             {
                                                 Language forhkproduct = Sitecore.Globalization.Language.Parse("en-HK");
 
-                                                                                             var producthk = database.GetItem(ite1.ID, forhkproduct);
+                                                var producthk = database.GetItem(ite1.ID, forhkproduct);
                                                 if(producthk.Versions.Count < 1)
                                                 { 
                                                     ite1.Versions.AddVersion();
@@ -719,11 +719,7 @@ namespace Sitecore.SharedSource.SmartTools.Dialogs
                                         {
                                             childitem.Versions.AddVersion();
                                         }
-                                     //   var sourcechild = database.GetItem(child.ID, sourceLang);
-                                       // if (sourcechild.Versions.Count > 0)
-                                        //{
-                                          //  childitem.Versions.RemoveVersion();
-                                        //}
+                                     
                                     }
                                     var catalogueitem = database.GetItem(ite.ID, lang);
                                     if (catalogueitem.Versions.Count < 1)
@@ -744,11 +740,7 @@ namespace Sitecore.SharedSource.SmartTools.Dialogs
                                         {
                                             ite.Versions.AddVersion();
                                         }
-                                        var sourcecatalogue = database.GetItem(ite.ID, sourceLang);
-                                        if (sourcecatalogue.Versions.Count > 0)
-                                        {
-                                            ite.Versions.RemoveVersion();
-                                        }
+                                        
                                         foreach (Item child in ite.Children)
                                         {
                                             var childitem = database.GetItem(child.ID, forhk);
