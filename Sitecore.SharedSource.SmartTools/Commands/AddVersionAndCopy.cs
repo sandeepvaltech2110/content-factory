@@ -16,7 +16,7 @@
     using System.Linq;
 
     [Serializable]
-    public class AddVersionAndCopy : Command
+    public class CreateContentFactory : Command
     {
         public override void Execute(CommandContext context)
         {

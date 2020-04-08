@@ -310,9 +310,11 @@ namespace Sitecore.SharedSource.SmartTools.Dialogs
         private void AddVersionAndCopyItems(Item item, List<string> targetSites, List<string> targetMedia, List<string> targetProduct, List<string> targetCatalogue, Language sourceLang)
         {
             Item producPageItem = null;
+            Item CataloguePageItem = null;
             foreach (var site in targetSites)
             {
                 Item source = Context.ContentDatabase.GetItem(item.ID, sourceLang);
+                Item sourcelatest = source.Versions.GetLatestVersion(sourceLang);
                 var language = source.Languages.FirstOrDefault(l => l.Name == sourceLang.ToString());
                 if (language != null)
                 {//For checking whether the source item has a version in that source language or not.
@@ -330,8 +332,8 @@ namespace Sitecore.SharedSource.SmartTools.Dialogs
                         Database database = Context.ContentDatabase;
                         string name = site.ToString().Remove(0, 14).Replace("_", "-");
                         MarketNameList = site.ToString();
-                        var catalogue = database.GetItem(source["Product"]);
-
+                        var catalogue = database.GetItem(sourcelatest["Product"]);
+                        var cataloguelatest = catalogue.Versions.GetLatestVersion(sourceLang);
 
                         Database masterDb = Sitecore.Configuration.Factory.GetDatabase("master");
                         //Conditions checked for the path provided
@@ -346,13 +348,13 @@ namespace Sitecore.SharedSource.SmartTools.Dialogs
                             msg = msg + "Sorry you have either given invalid path or have not provided any path" + Environment.NewLine;
                         }
 
-                        Language lang = Sitecore.Globalization.Language.Parse(name);
+                        Language languages = Sitecore.Globalization.Language.Parse(name);
 
 
                         if (parent1 != null)
                         {
                             string catalogname = "";
-                            using (new LanguageSwitcher(lang))
+                            using (new LanguageSwitcher(languages))
                             {
                                 foreach (Item ctname in parent1.Children)
                                 {
@@ -368,7 +370,8 @@ namespace Sitecore.SharedSource.SmartTools.Dialogs
                                 if (catalogname == "")
 
                                 {
-                                    var ite = catalogue.CopyTo(parent1, catalogue.Name);
+                                    var ite = cataloguelatest.CopyTo(parent1, catalogue.Name);
+                                    CataloguePageItem = ite;
                                     CatalogueItemID = ite.ID.ToString();
                                     ItemName = ite.Name.ToString();
                                     msg = msg + "Details of the newly created Catalogue for" + site;
@@ -574,7 +577,7 @@ namespace Sitecore.SharedSource.SmartTools.Dialogs
                                         {
                                             StatusLine2 = "Details for newly created product for " + site + ":-" + Environment.NewLine;
                                             msg = msg + StatusLine2 + Environment.NewLine;
-                                            var ite1 = source.CopyTo(parent, source.Name);
+                                            var ite1 = sourcelatest.CopyTo(parent, source.Name);
                                             producPageItem = ite1;
                                             msg = msg + "ProductID:-" + ite1.ID.ToString() + Environment.NewLine + "ProductPath:-" + parent.Paths.FullPath + Environment.NewLine + " ProductName:-" + ite1.Name + Environment.NewLine;
                                             Sitecore.Data.Fields.MultilistField multiselectField5 = ite1.Fields["Product"];
@@ -594,48 +597,43 @@ namespace Sitecore.SharedSource.SmartTools.Dialogs
                                                 }
                                             }
 
-                                            if (site == "Maybelline_V3_zh_HK")
-                                            {
-                                                Language forhkproduct = Sitecore.Globalization.Language.Parse("en-HK");
 
-                                                var producthk = database.GetItem(ite1.ID, forhkproduct);
-                                                if(producthk.Versions.Count < 1)
-                                                { 
-                                                    ite1.Versions.AddVersion();
-                                                }
-                                             }
-                                           
 
-                                          
-                                            var productitem = database.GetItem(ite1.ID, lang);
-                                           if (productitem.Versions.Count < 1)
-                                            {
-                                                productitem.Versions.AddVersion();
-                                            }
-                                     
-                                            var productsource = database.GetItem(ite1.ID, sourceLang);
-                                           
-                                               if (productsource.Versions.Count > 0)
-                                                {
-                                                    productsource.Versions.RemoveVersion();
-                                                }
 
-                                            
+
+
                                         }
 
+                                    }
+                                    var mediapath = targetMedia.SingleOrDefault(x => x.Contains(site));
+                                    var pathingswitcherimage = database.GetItem(mediapath.Replace(site, "") + "/" + "Pathing Switcher Image");
+                                    if (pathingswitcherimage != null)
+                                    {
+                                        foreach (Item childimage in pathingswitcherimage.Children)
+                                        {
+                                            producPageItem.Editing.BeginEdit();
+                                            var prodshot = (Data.Fields.ImageField)producPageItem.Fields["Pathing Switcher Image"];
+
+                                            prodshot.MediaID = childimage.ID;
+
+
+                                            producPageItem.Editing.EndEdit();
+
+                                        }
                                     }
                                     //For Shade Family
                                     foreach (Item child in ite.Children)
                                     {
-                                        var mediapath = targetMedia.SingleOrDefault(x => x.Contains(site));
                                         if (mediapath == null)
                                         {
                                             mediapath = "Please provide path";
+                                            msg = msg + "You have not provided media path. So, Images will be as per source market.";
                                         }
                                         var mediapathuniq = mediapath.Replace(site, "") + "/" + child.Name + "/";
                                         var productshot = database.GetItem(mediapath.Replace(site, "") + "/" + child.Name + "/" + "Product Shot");
                                         var swatch = database.GetItem(mediapath.Replace(site, "") + "/" + child.Name + "/" + "Swatch");
                                         var additionalimages = database.GetItem(mediapath.Replace(site, "") + "/" + child.Name + "/" + "Additional Images");
+
                                         if (productshot != null)
                                         {
 
@@ -712,84 +710,156 @@ namespace Sitecore.SharedSource.SmartTools.Dialogs
                                     msg = msg + "Please update " + ShadeFamilyField + "manually" + Environment.NewLine;
                                     StatusLine1 = "Also update Data-source for the used renderings.";
                                     msg = msg + StatusLine1 + Environment.NewLine;
-                                    foreach (Item child in ite.Children)
-                                    {
-                                        var childitem = database.GetItem(child.ID, lang);
-                                        if (childitem.Versions.Count < 1)
-                                        {
-                                            childitem.Versions.AddVersion();
-                                        }
-                                     
-                                    }
-                                    var catalogueitem = database.GetItem(ite.ID, lang);
-                                    if (catalogueitem.Versions.Count < 1)
-                                    {
-                                        catalogueitem.Versions.AddVersion();
-                                    }
-                                    var cataloguesource = database.GetItem(ite.ID, sourceLang);
-                                    if (cataloguesource.Versions.Count > 0)
-                                    {
-                                        cataloguesource.Versions.RemoveVersion();
-                                    }
-                                    
-                                    if (site == "Maybelline_V3_zh_HK")
-                                    {
-                                        Language forhk = Sitecore.Globalization.Language.Parse("en-HK");
-                                        var cataloguehk = database.GetItem(ite.ID, forhk);
-                                        if (cataloguehk.Versions.Count < 1)
-                                        {
-                                            ite.Versions.AddVersion();
-                                        }
-                                        
-                                        foreach (Item child in ite.Children)
-                                        {
-                                            var childitem = database.GetItem(child.ID, forhk);
-                                            if (childitem.Versions.Count < 1)
-                                            {
-                                                childitem.Versions.AddVersion();
-                                            }
-                                                                               }
-
-                                    }
-
-                              
-                                      
-                                        RenderingReference[] renderings = this.GetListOfSublayouts(producPageItem.ID.ToString());
-                                        List<string> ListOfDataSource1 = this.GetListOfDataSource(renderings);
-                                        
                                   
+
+
+                                    RenderingReference[] renderings = this.GetListOfSublayouts(producPageItem.ID.ToString());
+                                    List<string> ListOfDataSource1 = this.GetListOfDataSource(renderings);
+
+
 
 
 
                                 }
                             }
                         }
-                        if (source == null || target == null) return;
+                        
+                    }
+                }
+                if (producPageItem == null || CataloguePageItem == null)
+                {
 
-                        Sitecore.Diagnostics.Log.Debug("Smart Tools: AddVersionAndCopyItems-SourcePath-" + source.Paths.Path, this);
-                        Sitecore.Diagnostics.Log.Debug("Smart Tools: AddVersionAndCopyItemsSourceLanguage-" + sourceLang.Name, this);
+                }
+                else
+                {
+                    if (producPageItem.Name != null || CataloguePageItem.Name != null)
+                    {
 
-
-                        source = source.Versions.GetLatestVersion();
-                        target.Editing.BeginEdit();
-
-                        source.Fields.ReadAll();
-
-                        foreach (Field field in source.Fields)
+                        if (site == "Maybelline_V3_zh_HK")
                         {
-                            if (!field.Name.StartsWith("_")) //(!field.Shared)
-                                target[field.Name] = source[field.Name];
-                        }
-                        target.Editing.EndEdit();
+                            Language forhkproduct = Sitecore.Globalization.Language.Parse("en-HK");
 
+                            var productsource = Context.ContentDatabase.GetItem(producPageItem.ID, sourceLang);
+                            var producthk = Context.ContentDatabase.GetItem(producPageItem.ID, forhkproduct);
+                            productsource = productsource.Versions.GetLatestVersion();
+                            productsource.Fields.ReadAll();
+                            producthk.Versions.AddVersion();
+                            producthk.Editing.BeginEdit();
+                            foreach (Field field in productsource.Fields)
+                            {
+                                //   if (!field.Name.StartsWith("_")) //(!field.Shared)
+                                producthk[field.Name] = productsource[field.Name];
+                            }
+                            producthk.Editing.EndEdit();
+
+                        }
+
+                        if (site == "Maybelline_V3_zh_HK")
+                        {
+                            Language forhkproduct = Sitecore.Globalization.Language.Parse("en-HK");
+
+
+                            var cataloguesource = Context.ContentDatabase.GetItem(CataloguePageItem.ID, sourceLang);
+                            var cataloguehk = Context.ContentDatabase.GetItem(CataloguePageItem.ID, forhkproduct);
+                            cataloguesource = cataloguesource.Versions.GetLatestVersion();
+                            cataloguesource.Fields.ReadAll();
+                            cataloguehk.Versions.AddVersion();
+                            cataloguehk.Editing.BeginEdit();
+                            foreach (Field field in cataloguesource.Fields)
+                            {
+                                //   if (!field.Name.StartsWith("_")) //(!field.Shared)
+                                cataloguehk[field.Name] = cataloguesource[field.Name];
+                            }
+
+                            foreach (Item child in CataloguePageItem.Children)
+                            {
+                                var shade = Context.ContentDatabase.GetItem(child.ID, sourceLang);
+                                var childitem = Context.ContentDatabase.GetItem(child.ID, forhkproduct);
+                                shade = shade.Versions.GetLatestVersion();
+                                shade.Fields.ReadAll();
+                                childitem.Versions.AddVersion();
+                                childitem.Editing.BeginEdit();
+                                foreach (Field field in shade.Fields)
+                                {
+                                    //   if (!field.Name.StartsWith("_")) //(!field.Shared)
+                                    childitem[field.Name] = shade[field.Name];
+                                }
+                                childitem.Editing.EndEdit();
+
+                            }
+
+                            cataloguehk.Editing.EndEdit();
+
+                        }
+
+
+
+                        string languagetarget = site.ToString().Remove(0, 14).Replace("_", "-");
+                        Language lang = Sitecore.Globalization.Language.Parse(languagetarget);
+
+
+                        Item sourceProduct = Context.ContentDatabase.GetItem(producPageItem.ID, sourceLang);
+                        Item TargetProductVersion = Context.ContentDatabase.GetItem(producPageItem.ID, lang);
+                        Item sourceCatalogue = Context.ContentDatabase.GetItem(CataloguePageItem.ID, sourceLang);
+                        Item TargetCatalogueVersion = Context.ContentDatabase.GetItem(CataloguePageItem.ID, lang);
+                        if (sourceProduct == null || TargetProductVersion == null || sourceCatalogue == null || TargetCatalogueVersion == null) return;
+
+                        Sitecore.Diagnostics.Log.Debug("Smart Tools: AddVersionAndCopyItems-SourcePath-" + sourceProduct.Paths.Path, this);
+                        Sitecore.Diagnostics.Log.Debug("Smart Tools: AddVersionAndCopyItemsSourceLanguage-" + sourceLang.Name, this);
+                        Sitecore.Diagnostics.Log.Debug("Smart Tools: AddVersionAndCopyItems-TargetLanguage-" + lang.Name, this);
+
+                        sourceProduct = sourceProduct.Versions.GetLatestVersion();
+                        TargetProductVersion.Versions.AddVersion();
+                        TargetProductVersion.Editing.BeginEdit();
+                        sourceCatalogue = sourceCatalogue.Versions.GetLatestVersion();
+                        TargetCatalogueVersion.Versions.AddVersion();
+                        TargetCatalogueVersion.Editing.BeginEdit();
+                        sourceProduct.Fields.ReadAll();
+                        sourceCatalogue.Fields.ReadAll();
+                        foreach (Field field in sourceProduct.Fields)
+                        {
+                            //  if (!field.Name.StartsWith("_")) //(!field.Shared)
+                            TargetProductVersion[field.Name] = sourceProduct[field.Name];
+                        }
+                        foreach (Field field in sourceCatalogue.Fields)
+                        {
+                            // if (!field.Name.StartsWith("_")) //(!field.Shared)
+                            TargetCatalogueVersion[field.Name] = sourceCatalogue[field.Name];
+                        }
+
+
+                        foreach (Item variant in CataloguePageItem.Children)
+                        {
+                            var variantshade = Context.ContentDatabase.GetItem(variant.ID, sourceLang);
+                            var targetshade = Context.ContentDatabase.GetItem(variant.ID, lang);
+                            variantshade = variantshade.Versions.GetLatestVersion();
+                            targetshade.Versions.AddVersion();
+                            targetshade.Editing.BeginEdit();
+                            variantshade.Fields.ReadAll();
+                            foreach (Field field in variantshade.Fields)
+                            {
+                                //   if (!field.Name.StartsWith("_")) //(!field.Shared)
+                                targetshade[field.Name] = variantshade[field.Name];
+                            }
+                            targetshade.Editing.EndEdit();
+                            variantshade.Versions.RemoveVersion();
+                        }
+                        TargetProductVersion.Editing.EndEdit();
+                        TargetCatalogueVersion.Editing.EndEdit();
+
+                        sourceProduct.Versions.RemoveVersion();
+                        sourceCatalogue.Versions.RemoveVersion();
                         Sitecore.Diagnostics.Log.Debug("Smart Tools: AddVersionAndCopyItems-Completed.", this);
+
+
 
 
                     }
                 }
-            }
-            
+                         }
             this.Email();
+
+
         }
         private void Email()
         {
