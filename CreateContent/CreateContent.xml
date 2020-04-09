@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<control xmlns:def="Definition" xmlns="http://schemas.sitecore.net/Visual-Studio-Intellisense" xmlns:content="http://www.sitecore.net/content">
+  <CreateContent>
+    <FormDialog Icon="Control/32x32/edit_b.png" Header="Content Factory:Create Content in one click" 
+                Text="Use this form to create new item and publish the content from source site for the current content item and all 
+				the children items." OKButton="Create Content">
+
+      <Stylesheet Key="Warning">
+        .left {
+        float:left;
+        }
+      </Stylesheet>
+      <!--  <script Src="/sitecore/shell/Applications/Dialogs/AddVersionAndCopy/AddVersionAndCopy.js" Type="text/javascript" Language="javascript"/> -->
+
+   <Border GridPanel.NoWrap="true" width="50%" class="left">
+       <Literal Text="Source Language :"/>
+        <Combobox ID="Source" Change="Source_OnChange"/>
+      </Border>
+      <Space Width="2"/>
+     
+      <!--<Border GridPanel.NoWrap="true" width="50%" class="left">
+        --><!--<Literal Text="Priority:"/>
+        <Combobox ID="TranslateCustom_Priority">
+          <ListItem Header="-Select-" Value="-Select-" />
+          <ListItem Header="High" Value="High"/>
+          <ListItem Header="Medium" Value="Medium"/>
+          <ListItem Header="Low" Value="Low"/>
+        </Combobox>--><!--
+      </Border>-->
+      <CodeBeside Type="Sitecore.ContentFactory.SmartTools.Dialogs.CreateContentFactoryDialog, Sitecore.ContentFactory.SmartTools" />
+      <Stylesheet Src="Content Manager.css" DeviceDependant="true"/>
+      <Script Src="/sitecore/shell/Applications/Content Manager/Content Editor.js"/>
+
+      <Border ID="Fields" Background="white"/>
+
+      <!-- Checkbox - Language - textbox for reviewe email adress -->
+      <Border GridPanel.NoWrap="true" width="100%" class="left">
+        <Groupbox ID="TranslateCustom_Reviewer" Header="Please check target sites">
+          <Literal ID="TargetLanguages"/>
+        </Groupbox>
+		
+      </Border>
+	  
+      <Border GridPanel.NoWrap="true" width="100%" class="left">
+        <Groupbox ID="Group_Options" Header="Options">
+          <Literal ID="Options"/>
+        </Groupbox>
+      </Border>
+      <Space Width="2"/>
+    </FormDialog>
+  </CreateContent>
+</control>
