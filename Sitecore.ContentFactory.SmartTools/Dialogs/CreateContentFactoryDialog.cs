@@ -166,7 +166,7 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
                             str = str + "<div>" + site + " " + "<input class='reviewerCheckbox' type='checkbox' value='1' name='" + str2 + "'/> </div>";
                             str = str + "<div> Product Path:" + "<input type='textbox' id='Product" + site + "'/> </div>";
                             str = str + "<div> Catalog Path:" + "<input type='textbox' id='Catalog" + site + "'/> </div>";
-                            str = str + "<div> Media Path:" + "<input type='textbox' id='Media" + site + "'/> </div>";
+                            str = str + "<div> Media   Path:" + "<input type='textbox' id='Media" + site + "'/> </div>";
                             str = str + "<style >#TranslateCustom_Reviewer div:nth-child(odd) {background: #f1e7e7;padding: 10px;}#TranslateCustom_Reviewer div:nth-child(even) {background: #CCC;padding: 10px;}#TranslateCustom_Reviewer input[type=‘text’], #Group_Options input[type=‘text’], #TranslateCustom_Reviewer  input[type=‘password’], #TranslateCustom_Reviewer  select, #TranslateCustom_Reviewer  textarea {-moz-box-sizing: border-box;box-sizing: border-box;display: inline-block;width: 65%;min-height: 34px;padding: 8px 12px;font-size: 12px;line-height: 1.42857143;color: #474747;background-color: #ffffff;background-image: none;border: 1px solid #cccccc;border-radius: 2px;box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;font-family: Arial, Helvetica, sans-serif;margin: 0 0 0 10px;}</style>";
 
 
@@ -319,7 +319,7 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
                     var languagespecific = Context.ContentDatabase.GetItem(source.ID, language);
                     if (languagespecific.Versions.Count <= 0 || languagespecific.TemplateID.ToString() != ("{B76E9B72-04D9-44A5-8885-64D7022E1AC2}"))
                     {
-                        msg = msg + "Source Item version does not exist or Source Item is not elligible.";
+                        msg = msg + "Source Item version does not exist or Source Item is not elligible."+Environment.NewLine;
                     }
                     if (languagespecific != null && languagespecific.Versions.Count > 0 && languagespecific.TemplateID.ToString().Contains("{B76E9B72-04D9-44A5-8885-64D7022E1AC2}"))
 
@@ -374,9 +374,9 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
                                     CataloguePageItem = ite;
                                     CatalogueItemID = ite.ID.ToString();
                                     ItemName = ite.Name.ToString();
-                                    msg = msg + "Details of the newly created Catalogue for" + site;
+                                    msg = msg + "Details of the newly created Catalogue for" + site+":-"+Environment.NewLine;
                                     msg = msg + "CatalogueID:-" + CatalogueItemID + Environment.NewLine + "CataloguePath:-" + parent1.Paths.FullPath + Environment.NewLine + "CatalogueName:-" + ItemName + Environment.NewLine;
-                                    msg = msg + Environment.NewLine;
+                               
 
                                     //For tagging in newly created Catalogue
                                     Sitecore.Data.Fields.MultilistField multiselectField = catalogue.Fields["Brand"];
@@ -408,7 +408,7 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
                                         if (count != result)
                                         {
                                             BrandField = "Brand Field, ";
-                                            msg = msg + "Please update these fields manually" + Environment.NewLine;
+                                            msg = msg + "Please update these fields manually:-" + Environment.NewLine;
                                             msg = msg + BrandField;
                                         }
 
@@ -787,108 +787,145 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
                         }
                         TargetProductVersion.Editing.EndEdit();
                         TargetCatalogueVersion.Editing.EndEdit();
-                        Item currentCatalogueVersion = Sitecore.Context.ContentDatabase.GetItem(TargetCatalogueVersion.ID, lang);
-                        Item currentProductVersion = Sitecore.Context.ContentDatabase.GetItem(producPageItem.ID, lang);
-                        foreach(Item children in currentCatalogueVersion.Children)
-                        {
-                            Item currentshade=Sitecore.Context.ContentDatabase.GetItem(children.ID, lang);
-                            Item[] currentshadeversion = children.Versions.GetVersions(true);
-                            foreach (Item itemVersion in currentshadeversion)
-                            {
-                                // remove the version if it is not the most recent
-                                if (!itemVersion.Version.Number.Equals(currentshade.Version.Number))
-                                {
-                                    itemVersion.Versions.RemoveVersion();
-                                }
-                            }
-
-                        }
-                        Item[] catalogueversions = TargetCatalogueVersion.Versions.GetVersions(true);
-                        Item[] productversions = TargetProductVersion.Versions.GetVersions(true);
-
-                        // loop through the item versions
-                        foreach (Item itemVersion in catalogueversions)
-                        {
-                            // remove the version if it is not the most recent
-                            if (!itemVersion.Version.Number.Equals(currentCatalogueVersion.Version.Number))
-                            {
-                                itemVersion.Versions.RemoveVersion();
-                            }
-                        }
-                        foreach (Item productVersion in productversions)
-                        {
-                            // remove the version if it is not the most recent
-                            if (!productVersion.Version.Number.Equals(currentProductVersion.Version.Number))
-                            {
-                                productVersion.Versions.RemoveVersion();
-                            }
-                        }
-                        sourceProduct.Versions.RemoveVersion();
+                        
+                       sourceProduct.Versions.RemoveVersion();
                         sourceCatalogue.Versions.RemoveVersion();
                         Sitecore.Diagnostics.Log.Debug("Smart Tools: Create Content-Completed.", this);
 
-                        if (site == "Maybelline_V3_zh_HK")
+                        var getCataloguePageItems = Sitecore.Context.ContentDatabase.GetItem(CataloguePageItem.ID,lang,new Data.Version(1));
+                        var getProductPageItems = Sitecore.Context.ContentDatabase.GetItem(producPageItem.ID,lang,new Data.Version(1));
+                        
+                        foreach (Item child1 in getCataloguePageItems.Children)
                         {
-                            Language forhkproduct = Sitecore.Globalization.Language.Parse("en-HK");
+                            var child = Sitecore.Context.ContentDatabase.GetItem(child1.ID, lang, new Data.Version(1));
+                            this.RemovePreviousVersions(child, true);
 
-                            var productsource = Context.ContentDatabase.GetItem(producPageItem.ID, lang);
-                            var producthk = Context.ContentDatabase.GetItem(producPageItem.ID, forhkproduct);
-                            productsource = productsource.Versions.GetLatestVersion();
-                            productsource.Fields.ReadAll();
-                            producthk.Versions.AddVersion();
-                            producthk.Editing.BeginEdit();
-                            foreach (Field field in productsource.Fields)
-                            {
-                                //   if (!field.Name.StartsWith("_")) //(!field.Shared)
-                                producthk[field.Name] = productsource[field.Name];
-                            }
-                            producthk.Editing.EndEdit();
+                        }
+                        this.RemovePreviousVersions(getCataloguePageItems,true);
+                        this.RemovePreviousVersions(getProductPageItems, true);
+                    
+
+                    }
+                }
+                if(producPageItem==null || CataloguePageItem == null)
+                {
+
+                }
+                else
+                {
+                    foreach (Item child in CataloguePageItem.Children)
+                    {
+                        var shade = Sitecore.Context.ContentDatabase.GetItem(child.ID, sourceLang);
+                        if (shade.Versions.Count == 1)
+                        {
+                            shade.Versions.RemoveVersion();
+                        }
+                    }
+                    var producsource = Sitecore.Context.ContentDatabase.GetItem(producPageItem.ID, sourceLang);
+                    if (producsource.Versions.Count == 1)
+                    {
+                        producsource.Versions.RemoveVersion();
+                    }
+                    var catalogsource = Sitecore.Context.ContentDatabase.GetItem(CataloguePageItem.ID, sourceLang);
+                    if (catalogsource.Versions.Count == 1)
+                    {
+                        catalogsource.Versions.RemoveVersion();
+                    }
+
+                    if (sourceLang.ToString() == "en-HK" || sourceLang.ToString() == "zh-HK")
+                    {
+                        Language languagehk = Sitecore.Globalization.Language.Parse("en-Hk");
+                        Language languagechk = Sitecore.Globalization.Language.Parse("zh-HK");
+
+                        var getproduct = Sitecore.Context.ContentDatabase.GetItem(producsource.ID,languagehk,new Data.Version(1));
+                        var getproductchk = Sitecore.Context.ContentDatabase.GetItem(producsource.ID, languagechk, new Data.Version(1));
+                        getproduct.Versions.RemoveVersion();
+                        getproductchk.Versions.RemoveVersion();
+                        var getcatalog= Sitecore.Context.ContentDatabase.GetItem(catalogsource.ID, languagehk, new Data.Version(1));
+                        var getcatalogchk = Sitecore.Context.ContentDatabase.GetItem(catalogsource.ID, languagechk, new Data.Version(1));
+                        getcatalog.Versions.RemoveVersion();
+                        getcatalogchk.Versions.RemoveVersion();
+                        foreach(Item child in catalogsource.Children)
+                        {
+                            var shadehk = Sitecore.Context.ContentDatabase.GetItem(child.ID, languagehk, new Data.Version(1));
+                            var shadechk = Sitecore.Context.ContentDatabase.GetItem(child.ID, languagechk, new Data.Version(1));
+                   shadehk.Versions.RemoveVersion();
+                            shadechk.Versions.RemoveVersion();
 
                         }
 
-                        if (site == "Maybelline_V3_zh_HK")
+                    }
+                    if (site == "Maybelline_V3_zh_HK")
+                    {
+                        Language forhkproduct = Sitecore.Globalization.Language.Parse("en-HK");
+                        string languagetarget = site.ToString().Remove(0, 14).Replace("_", "-");
+                        Language lang = Sitecore.Globalization.Language.Parse(languagetarget);
+
+                        var productsource = Context.ContentDatabase.GetItem(producPageItem.ID, lang);
+                        var producthk = Context.ContentDatabase.GetItem(producPageItem.ID, forhkproduct);
+                        productsource = productsource.Versions.GetLatestVersion();
+                        productsource.Fields.ReadAll();
+                        producthk.Versions.AddVersion();
+                        producthk.Editing.BeginEdit();
+                        foreach (Field field in productsource.Fields)
                         {
-                            Language forhkproduct = Sitecore.Globalization.Language.Parse("en-HK");
+                            //   if (!field.Name.StartsWith("_")) //(!field.Shared)
+                            producthk[field.Name] = productsource[field.Name];
+                        }
+                        producthk.Editing.EndEdit();
+                        producthk = producthk.Versions.GetLatestVersion();
+                        if (producthk.Version.Number == 2)
+                        {
+                            producthk.Versions.RemoveVersion();
+                        }
+                    }
+
+                    if (site == "Maybelline_V3_zh_HK")
+                    {
+                        Language forhkproduct = Sitecore.Globalization.Language.Parse("en-HK");
+                        string languagetarget = site.ToString().Remove(0, 14).Replace("_", "-");
+                        Language lang = Sitecore.Globalization.Language.Parse(languagetarget);
 
 
-                            var cataloguesource = Context.ContentDatabase.GetItem(CataloguePageItem.ID,lang);
-                            var cataloguehk = Context.ContentDatabase.GetItem(CataloguePageItem.ID, forhkproduct);
-                            cataloguesource = cataloguesource.Versions.GetLatestVersion();
-                            cataloguesource.Fields.ReadAll();
-                            cataloguehk.Versions.AddVersion();
-                            cataloguehk.Editing.BeginEdit();
-                            foreach (Field field in cataloguesource.Fields)
-                            {
-                                //   if (!field.Name.StartsWith("_")) //(!field.Shared)
-                                cataloguehk[field.Name] = cataloguesource[field.Name];
-                            }
-
-                            foreach (Item child in CataloguePageItem.Children)
-                            {
-                                var shade = Context.ContentDatabase.GetItem(child.ID, lang);
-                                var childitem = Context.ContentDatabase.GetItem(child.ID, forhkproduct);
-                                shade = shade.Versions.GetLatestVersion();
-                                shade.Fields.ReadAll();
-                                childitem.Versions.AddVersion();
-                                childitem.Editing.BeginEdit();
-                                foreach (Field field in shade.Fields)
-                                {
-                                    //   if (!field.Name.StartsWith("_")) //(!field.Shared)
-                                    childitem[field.Name] = shade[field.Name];
-                                }
-                                childitem.Editing.EndEdit();
-
-                            }
-
-                            cataloguehk.Editing.EndEdit();
-
+                        var cataloguesource = Context.ContentDatabase.GetItem(CataloguePageItem.ID, lang);
+                        var cataloguehk = Context.ContentDatabase.GetItem(CataloguePageItem.ID, forhkproduct);
+                        cataloguesource = cataloguesource.Versions.GetLatestVersion();
+                        cataloguesource.Fields.ReadAll();
+                        cataloguehk.Versions.AddVersion();
+                        cataloguehk.Editing.BeginEdit();
+                        foreach (Field field in cataloguesource.Fields)
+                        {
+                            //   if (!field.Name.StartsWith("_")) //(!field.Shared)
+                            cataloguehk[field.Name] = cataloguesource[field.Name];
                         }
 
+                        foreach (Item child in CataloguePageItem.Children)
+                        {
+                            var shade = Context.ContentDatabase.GetItem(child.ID, lang);
+                            var childitem = Context.ContentDatabase.GetItem(child.ID, forhkproduct);
+                            shade = shade.Versions.GetLatestVersion();
+                            shade.Fields.ReadAll();
+                            childitem.Versions.AddVersion();
+                            childitem.Editing.BeginEdit();
+                            foreach (Field field in shade.Fields)
+                            {
+                                //   if (!field.Name.StartsWith("_")) //(!field.Shared)
+                                childitem[field.Name] = shade[field.Name];
+                            }
+                            childitem.Editing.EndEdit();
+                            childitem = childitem.Versions.GetLatestVersion();
+                            if (childitem.Version.Number == 2)
+                            {
+                                childitem.Versions.RemoveVersion();
+                            }
+                        }
 
-
-
-
-
+                        cataloguehk.Editing.EndEdit();
+                        cataloguehk = cataloguehk.Versions.GetLatestVersion();
+                        if (cataloguehk.Version.Number == 2)
+                        {
+                            cataloguehk.Versions.RemoveVersion();
+                        }
                     }
                 }
             }
@@ -897,6 +934,26 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
             finalReport.Editing.BeginEdit();
             finalReport["Description"] = msg;
             finalReport.Editing.EndEdit();
+        }
+
+
+        
+
+        private void RemovePreviousVersions(Item myItem, bool includeAllLanguages)
+        {
+            // get the most recent version
+            Item currentVersion = myItem;
+            Item[] versions = myItem.Versions.GetVersions(includeAllLanguages);
+
+            // loop through the item versions
+            foreach (Item itemVersion in versions)
+            {
+                // remove the version if it is not the most recent
+                if (!itemVersion.Version.Number.Equals(currentVersion.Version.Number))
+                {
+                    itemVersion.Versions.RemoveVersion();
+                }
+            }
         }
         private void Email()
         {
@@ -916,7 +973,7 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
                     message.Subject = "Details for newly created items for your market";
                     message.IsBodyHtml = false;
                     message.Body.Replace("\r\n", "\n").Replace("\n", "<br />");
-                    message.Body = Environment.NewLine + "Hello,\n";
+                    message.Body = Environment.NewLine + "Hello,\n"+Environment.NewLine;
                     message.Body = message.Body + msg;
 
 
