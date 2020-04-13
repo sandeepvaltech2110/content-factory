@@ -114,10 +114,12 @@
                     {
                         var finalReport = Sitecore.Context.ContentDatabase.GetItem("/sitecore/content/MNY/Global Configuration/Content Factory Last Report/Report");
                         string messageReport = finalReport["Description"];
-
+                   
+                   
                         Context.ClientPage.ClientResponse.Alert(messageReport);
                         finalReport.Editing.BeginEdit();
                         finalReport["Description"] = "";
+                    
                         finalReport.Editing.EndEdit();
                     }
                 }

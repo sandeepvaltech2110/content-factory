@@ -1,6 +1,4 @@
 ﻿
-
-
 using Sitecore.Jobs;
 using Sitecore.Shell.Framework.Commands;
 using Sitecore.Web.UI.Sheer;
@@ -73,6 +71,7 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
         protected string CatalogueItemPath;
         protected string msg;
         protected string eml;
+        protected string SourceSite;
 
 
 
@@ -113,8 +112,9 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
             {
                 if (itemFromQueryString.Paths.FullPath.ToString().Contains(i.Name))
                 {
-
+                    SourceSite = i.Name;
                     this.Site.Remove(i.Name);
+
                 }
             }
 
@@ -319,13 +319,13 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
                     var languagespecific = Context.ContentDatabase.GetItem(source.ID, language);
                     if (languagespecific.Versions.Count <= 0 || languagespecific.TemplateID.ToString() != ("{B76E9B72-04D9-44A5-8885-64D7022E1AC2}"))
                     {
-                        msg = msg + "Source Item version does not exist or Source Item is not elligible."+Environment.NewLine;
+                        msg = msg + "Source Item version does not exist or Source Item is not elligible." + Environment.NewLine;
                     }
                     if (languagespecific != null && languagespecific.Versions.Count > 0 && languagespecific.TemplateID.ToString().Contains("{B76E9B72-04D9-44A5-8885-64D7022E1AC2}"))
 
                     {
-                        string path = source.Parent.Parent.Parent.Parent.Paths.FullPath.ToString().Remove(0, 36);
-                        string taggingpath = source.Parent.Parent.Parent.Parent.Paths.FullPath.ToString().Remove(0, 22);
+                       // string path = source.Parent.Parent.Parent.Parent.Paths.FullPath.ToString().Remove(0, 36);
+                        string taggingpath = SourceSite.ToString();
                         Item target = Context.ContentDatabase.GetItem(item.ID, language);
                         Database database = Context.ContentDatabase;
                         string name = site.ToString().Remove(0, 14).Replace("_", "-");
@@ -374,9 +374,9 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
                                     CataloguePageItem = ite;
                                     CatalogueItemID = ite.ID.ToString();
                                     ItemName = ite.Name.ToString();
-                                    msg = msg + "Details of the newly created Catalogue for" + site+":-"+Environment.NewLine;
-                                    msg = msg + "CatalogueID:-" + CatalogueItemID + Environment.NewLine + "CataloguePath:-" + parent1.Paths.FullPath + Environment.NewLine + "CatalogueName:-" + ItemName + Environment.NewLine;
-                               
+                                    msg = msg + "Details of the newly created Catalogue for " + site + ":-" + "\n" + Environment.NewLine;
+                                    msg = msg + "Catalogue Name:- " + ItemName + Environment.NewLine + "Catalogue ID:- " + CatalogueItemID + Environment.NewLine + "Catalogue Path:- " + parent1.Paths.FullPath + Environment.NewLine;
+
 
                                     //For tagging in newly created Catalogue
                                     Sitecore.Data.Fields.MultilistField multiselectField = catalogue.Fields["Brand"];
@@ -536,8 +536,8 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
                                         int result = items4.GetLength(0);
                                         if (count != result)
                                         {
-                                            FormField = "Form Field, ";
-                                            msg = msg + FormField + Environment.NewLine;
+                                            FormField = "Form Field ";
+                                            msg = msg + FormField + Environment.NewLine + "\n";
                                         }
 
                                     }
@@ -575,11 +575,11 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
                                         //For creation of new Product
                                         if (productname == "")
                                         {
-                                            StatusLine2 = "Details for newly created product for " + site + ":-" + Environment.NewLine;
+                                            StatusLine2 = "\n" + "Details for newly created Product for " + site + ":-" + "\n";
                                             msg = msg + StatusLine2 + Environment.NewLine;
                                             var ite1 = sourcelatest.CopyTo(parent, source.Name);
                                             producPageItem = ite1;
-                                            msg = msg + "ProductID:-" + ite1.ID.ToString() + Environment.NewLine + "ProductPath:-" + parent.Paths.FullPath + Environment.NewLine + " ProductName:-" + ite1.Name + Environment.NewLine;
+                                            msg = msg + "Product Name:- " + ite1.Name + Environment.NewLine + "Product ID:- " + ite1.ID.ToString() + Environment.NewLine + "Product Path:- " + parent.Paths.FullPath + Environment.NewLine;
                                             Sitecore.Data.Fields.MultilistField multiselectField5 = ite1.Fields["Product"];
 
                                             Sitecore.Data.Items.Item[] items5 = multiselectField5.GetItems();
@@ -703,22 +703,23 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
                                             int result = items5.GetLength(0);
                                             if (count != result)
                                             {
-                                                ShadeFamilyField = "ShadeFamily Field, ";
+                                                ShadeFamilyField = "ShadeFamily Field ";
                                             }
                                         }
                                     }
-                                    msg = msg + "Please update " + ShadeFamilyField + "manually" + Environment.NewLine;
-                                    StatusLine1 = "Also update Data-source for the used renderings.";
+                                    msg = msg + "Please update these fields manually:- " + "\n" + ShadeFamilyField + Environment.NewLine + "\n" + "\n";
+                                    StatusLine1 = "Also update below Data-source for the used renderings:-" + "\n";
                                     msg = msg + StatusLine1 + Environment.NewLine;
 
 
 
                                     RenderingReference[] renderings = this.GetListOfSublayouts(producPageItem.ID.ToString());
                                     List<string> ListOfDataSource1 = this.GetListOfDataSource(renderings);
+                                    foreach (var datasource in ListOfDataSource1)
+                                    {
+                                        msg = msg + datasource + Environment.NewLine;
 
-
-
-
+                                    }
 
                                 }
                             }
@@ -735,7 +736,7 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
                     if (producPageItem.Name != null || CataloguePageItem.Name != null)
                     {
 
-                                          string languagetarget = site.ToString().Remove(0, 14).Replace("_", "-");
+                        string languagetarget = site.ToString().Remove(0, 14).Replace("_", "-");
                         Language lang = Sitecore.Globalization.Language.Parse(languagetarget);
 
 
@@ -787,27 +788,27 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
                         }
                         TargetProductVersion.Editing.EndEdit();
                         TargetCatalogueVersion.Editing.EndEdit();
-                        
-                       sourceProduct.Versions.RemoveVersion();
+
+                        sourceProduct.Versions.RemoveVersion();
                         sourceCatalogue.Versions.RemoveVersion();
                         Sitecore.Diagnostics.Log.Debug("Smart Tools: Create Content-Completed.", this);
 
-                        var getCataloguePageItems = Sitecore.Context.ContentDatabase.GetItem(CataloguePageItem.ID,lang,new Data.Version(1));
-                        var getProductPageItems = Sitecore.Context.ContentDatabase.GetItem(producPageItem.ID,lang,new Data.Version(1));
-                        
+                        var getCataloguePageItems = Sitecore.Context.ContentDatabase.GetItem(CataloguePageItem.ID, lang, new Data.Version(1));
+                        var getProductPageItems = Sitecore.Context.ContentDatabase.GetItem(producPageItem.ID, lang, new Data.Version(1));
+
                         foreach (Item child1 in getCataloguePageItems.Children)
                         {
                             var child = Sitecore.Context.ContentDatabase.GetItem(child1.ID, lang, new Data.Version(1));
                             this.RemovePreviousVersions(child, true);
 
                         }
-                        this.RemovePreviousVersions(getCataloguePageItems,true);
+                        this.RemovePreviousVersions(getCataloguePageItems, true);
                         this.RemovePreviousVersions(getProductPageItems, true);
-                    
+
 
                     }
                 }
-                if(producPageItem==null || CataloguePageItem == null)
+                if (producPageItem == null || CataloguePageItem == null)
                 {
 
                 }
@@ -837,19 +838,19 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
                         Language languagehk = Sitecore.Globalization.Language.Parse("en-Hk");
                         Language languagechk = Sitecore.Globalization.Language.Parse("zh-HK");
 
-                        var getproduct = Sitecore.Context.ContentDatabase.GetItem(producsource.ID,languagehk,new Data.Version(1));
+                        var getproduct = Sitecore.Context.ContentDatabase.GetItem(producsource.ID, languagehk, new Data.Version(1));
                         var getproductchk = Sitecore.Context.ContentDatabase.GetItem(producsource.ID, languagechk, new Data.Version(1));
                         getproduct.Versions.RemoveVersion();
                         getproductchk.Versions.RemoveVersion();
-                        var getcatalog= Sitecore.Context.ContentDatabase.GetItem(catalogsource.ID, languagehk, new Data.Version(1));
+                        var getcatalog = Sitecore.Context.ContentDatabase.GetItem(catalogsource.ID, languagehk, new Data.Version(1));
                         var getcatalogchk = Sitecore.Context.ContentDatabase.GetItem(catalogsource.ID, languagechk, new Data.Version(1));
                         getcatalog.Versions.RemoveVersion();
                         getcatalogchk.Versions.RemoveVersion();
-                        foreach(Item child in catalogsource.Children)
+                        foreach (Item child in catalogsource.Children)
                         {
                             var shadehk = Sitecore.Context.ContentDatabase.GetItem(child.ID, languagehk, new Data.Version(1));
                             var shadechk = Sitecore.Context.ContentDatabase.GetItem(child.ID, languagechk, new Data.Version(1));
-                   shadehk.Versions.RemoveVersion();
+                            shadehk.Versions.RemoveVersion();
                             shadechk.Versions.RemoveVersion();
 
                         }
@@ -933,11 +934,12 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
             var finalReport = Sitecore.Context.ContentDatabase.GetItem("/sitecore/content/MNY/Global Configuration/Content Factory Last Report/Report");
             finalReport.Editing.BeginEdit();
             finalReport["Description"] = msg;
+            finalReport["Value"] = System.DateTime.Now.ToString();
             finalReport.Editing.EndEdit();
         }
 
 
-        
+
 
         private void RemovePreviousVersions(Item myItem, bool includeAllLanguages)
         {
@@ -957,15 +959,18 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
         }
         private void Email()
         {
-
+            var EmailItem = Context.ContentDatabase.GetItem("/sitecore/content/MNY/Global Configuration/Content Factory Last Report/Email Info");
+            string from = EmailItem["Value"].ToString();
+            string address = EmailItem["Description"].ToString();
+            string[] result = address.Split(new char[] { ',' });
 
             try
             {
                 if (eml != "")
                 {
                     MailMessage message = new MailMessage();
-                    SmtpClient smtp = new SmtpClient("192.168.130.134", 29);
-                    message.From = new MailAddress("mailapp@valtech.co.in");
+                    SmtpClient smtp = new SmtpClient(result[0], System.Convert.ToInt32(result[1]));
+                    message.From = new MailAddress(from);
 
                     message.To.Add(new MailAddress(eml));
 
@@ -973,7 +978,7 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
                     message.Subject = "Details for newly created items for your market";
                     message.IsBodyHtml = false;
                     message.Body.Replace("\r\n", "\n").Replace("\n", "<br />");
-                    message.Body = Environment.NewLine + "Hello,\n"+Environment.NewLine;
+                    message.Body = Environment.NewLine + "Hello,\n" + Environment.NewLine;
                     message.Body = message.Body + msg;
 
 
@@ -1118,12 +1123,24 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
 
         public List<string> GetListOfDataSource(RenderingReference[] renderings)
         {
+            Database database = Context.ContentDatabase;
             List<string> ListOfDataSource = new List<string>();
+            List<string> ListOfDataSource1 = new List<string>();
             foreach (RenderingReference rendering in renderings)
             {
                 ListOfDataSource.Add(rendering.Settings.DataSource);
+                foreach (string list in ListOfDataSource)
+                {
+                    if (list != "")
+                    {
+                        //var itemm1 =database.GetItem(new ID("{CC6E5109-5FB7-48BC-8306-DB39DDEF8AD3}"));
+                        //var itemm = database.Items.GetItem(rendering.RenderingID);
+                        var renderingName = database.Items.GetItem(rendering.RenderingID).Name.ToString();
+                        ListOfDataSource1.Add("DataSource ID:- " + list + "\n" + "Rendering Name:- " + renderingName + "\n" + "Rendering ID:- " + rendering.RenderingID.ToString() + "\n");
+                    }
+                }
             }
-            return ListOfDataSource;
+            return ListOfDataSource1;
         }
 
 
