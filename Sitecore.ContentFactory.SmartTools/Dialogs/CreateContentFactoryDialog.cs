@@ -607,6 +607,7 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
                                     }
                                     var mediapath = targetMedia.SingleOrDefault(x => x.Contains(site));
                                     var pathingswitcherimage = database.GetItem(mediapath.Replace(site, "") + "/" + "Pathing Switcher Image");
+                                    var SearchResultsImage = database.GetItem(mediapath.Replace(site, "") + "/" + "Search Results Image");
                                     if (pathingswitcherimage != null)
                                     {
                                         foreach (Item childimage in pathingswitcherimage.Children)
@@ -621,6 +622,21 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
 
                                         }
                                     }
+                                    if (SearchResultsImage != null)
+                                    {
+                                        foreach (Item childimage in SearchResultsImage.Children)
+                                        {
+                                            producPageItem.Editing.BeginEdit();
+                                            var prodshot = (Data.Fields.ImageField)producPageItem.Fields["Search Results Image"];
+
+                                            prodshot.MediaID = childimage.ID;
+
+
+                                            producPageItem.Editing.EndEdit();
+
+                                        }
+                                    }
+
                                     //For Shade Family
                                     foreach (Item child in ite.Children)
                                     {
