@@ -1,4 +1,5 @@
 ﻿
+
 using Sitecore.Jobs;
 using Sitecore.Shell.Framework.Commands;
 using Sitecore.Web.UI.Sheer;
@@ -18,11 +19,13 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
     using Sitecore.Layouts;
     using Sitecore.Shell.Applications.ContentEditor;
     using Sitecore.Shell.Applications.Dialogs.ProgressBoxes;
+    using Sitecore.Sites;
     using Sitecore.Web.UI.HtmlControls;
     using Sitecore.Web.UI.Pages;
     using System;
     using System.Collections;
     using System.Collections.Generic;
+    using System.Collections.Specialized;
     using System.Data;
     using System.Globalization;
     using System.Linq;
@@ -43,12 +46,15 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
         protected Web.UI.HtmlControls.Literal TargetPath;
         protected Web.UI.HtmlControls.Literal TargetCatalogue;
         protected Web.UI.HtmlControls.Literal TargetMedia;
+        protected Web.UI.HtmlControls.Literal TargetImages;
         protected TreeList TreeListOfItems;
         protected List<Language> targetLanguagesList;
         protected List<string> targetSiteList;
         protected List<string> ProductPathList;
         protected List<string> CataloguePathList;
         protected List<string> MediaPathList;
+        protected List<string> TargetMediaList;
+
         protected string ProductItemID;
         protected string CatalogueItemID;
         //protected string ProductItemPath;
@@ -70,10 +76,11 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
         protected string ProductItemPath;
         protected string CatalogueItemPath;
         protected string msg;
+        protected string emailto;
         protected string eml;
         protected string SourceSite;
-
-
+        protected string finalreportdetails;
+        protected List<string> EmailList;
 
 
         private void fillLanguageDictionary()
@@ -112,9 +119,9 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
             {
                 if (itemFromQueryString.Paths.FullPath.ToString().Contains(i.Name))
                 {
+
                     SourceSite = i.Name;
                     this.Site.Remove(i.Name);
-
                 }
             }
 
@@ -162,22 +169,26 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
                         foreach (var site in this.Site)
                         {
                             string str2 = "chk_" + site;
+                            string str3 = "chk_" + "Copy Media Images from Source to Target Markets" + site;
 
                             str = str + "<div>" + site + " " + "<input class='reviewerCheckbox' type='checkbox' value='1' name='" + str2 + "'/> </div>";
                             str = str + "<div> Product Path:" + "<input type='textbox' id='Product" + site + "'/> </div>";
                             str = str + "<div> Catalog Path:" + "<input type='textbox' id='Catalog" + site + "'/> </div>";
-                            str = str + "<div> Media   Path:" + "<input type='textbox' id='Media" + site + "'/> </div>";
-                            str = str + "<style >#TranslateCustom_Reviewer div:nth-child(odd) {background: #f1e7e7;padding: 10px;}#TranslateCustom_Reviewer div:nth-child(even) {background: #CCC;padding: 10px;}#TranslateCustom_Reviewer input[type=‘text’], #Group_Options input[type=‘text’], #TranslateCustom_Reviewer  input[type=‘password’], #TranslateCustom_Reviewer  select, #TranslateCustom_Reviewer  textarea {-moz-box-sizing: border-box;box-sizing: border-box;display: inline-block;width: 65%;min-height: 34px;padding: 8px 12px;font-size: 12px;line-height: 1.42857143;color: #474747;background-color: #ffffff;background-image: none;border: 1px solid #cccccc;border-radius: 2px;box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;font-family: Arial, Helvetica, sans-serif;margin: 0 0 0 10px;}</style>";
+                            str = str + "<div>" + "Copy Media Images from Source to Target Markets" + " " + "<input class='reviewerCheckbox' type='checkbox' value='1' name='" + str3 + "'/> </div>";
 
+                            str = str + "<div>  Media   Path:" + "<input type='textbox' id='Media" + site + "'/> </div>";
+                            str = str + "<div>  Email:" + "<input type='textbox' id='Email1" + site + "'/> </div>";
 
 
                         }
+                        str = str + "<style>#TranslateCustom_Reviewer div:nth-child(odd){background:#f1e7e7;padding:10px;height:22px;position:relative}#TranslateCustom_Reviewer div:nth-child(even){background:#ccc;padding:10px;height:22px;position:relative}#Group_Options input[type=‘text’],#TranslateCustom_Reviewer input[type=‘password’],#TranslateCustom_Reviewer input[type=‘text’],#TranslateCustom_Reviewer select,#TranslateCustom_Reviewer textarea{-moz-box-sizing:border-box;box-sizing:border-box;display:inline-block;width:65%;min-height:34px;padding:8px 12px;font-size:12px;line-height:1.42857143;color:#474747;background-color:#fff;background-image:none;border:1px solid #ccc;border-radius:2px;box-shadow:inset 0 1px 1px rgba(0,0,0,.075);transition:border-color ease-in-out .15s,box-shadow ease-in-out .15s;font-family:Arial,Helvetica,sans-serif;margin:0 0 0 10px}#Group_Options input[type=textbox],#TranslateCustom_Reviewer input[type=textbox]{height:24px;min-width:65%;position:absolute;left:120px;top:7px;background-color:#fff;background-image:none;border:1px solid #8a8888;border-radius:2px;box-shadow:inset 0 1px 1px rgba(0,0,0,.075);transition:border-color ease-in-out .15s,box-shadow ease-in-out .15s;font-family:Arial,Helvetica,sans-serif}#Group_Options input[type=textbox]{top:0;position: relative; left: 0; width: 285px;}#Group_Options{width:100%;background:#a9a9a9;margin: 10px 0;position:relative;overflow:hidden}#Group_Options #Group_Optionslegend{background:#a9a9a9;width:100%;padding:10px}#Group_Options #Options{padding:10px;display:block}</style>";
+
                         this.TargetLanguages.Text = str;
                     }
 
                     str = "";
                     str += "<table>";
-                    str += "<tr><td>Email:</td><td><input type='textbox' id='email'/></td></tr>";
+                    str += "<tr><td>Send Report to Email:</td><td><input type='textbox' id='email'/></td></tr>";
                     //str += "<tr><td>Include SubItems:</td><td><input class='optionsCheckbox' type='checkbox' value='1' name='chk_IncludeSubItems'/></td></tr>";
                     str += "</table>";
                     this.Options.Text = str;
@@ -188,6 +199,7 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
                     //str += eml ="<tr><td>Email:</td><td><input type='textbox' id='email'/></td></tr>";
 
                     //this.Options.Text = str;
+
                 }
             }
             catch (Exception exception)
@@ -208,6 +220,8 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
             ProductPathList = new List<string>();
             CataloguePathList = new List<string>();
             MediaPathList = new List<string>();
+            EmailList = new List<string>();
+            TargetMediaList = new List<string>();
 
             try
             {
@@ -234,16 +248,24 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
                         targetSiteList.Add(site);
                         string s = Context.ClientPage.Request.Params.Get("Product" + site + "").Replace(",", "");
                         string s1 = Context.ClientPage.Request.Params.Get("Catalog" + site + "").Replace(",", "");
+
                         string s2 = Context.ClientPage.Request.Params.Get("Media" + site + "").Replace(",", "") + site;
+                        string eml1 = Context.ClientPage.Request.Params.Get("Email1" + site + "") + ";" + site;
                         ProductPathList.Add(s);
                         CataloguePathList.Add(s1);
                         MediaPathList.Add(s2);
+                        EmailList.Add(eml1);
+                        if (!string.IsNullOrEmpty(Context.ClientPage.Request.Params.Get("chk_" + "Copy Media Images from Source to Target Markets" + site)))
+                        {
+                            TargetMediaList.Add(site);
+                        }
 
 
                     }
                 }
 
                 eml = Context.ClientPage.Request.Params.Get("email");
+
 
                 //Execute the process
                 if (itemFromQueryString != null && targetSiteList.Count > 0 && sourceLanguage != null && ProductPathList.Count > 0 && CataloguePathList.Count > 0)
@@ -281,8 +303,7 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
 
             Item item = (Item)parameters[0];
 
-            IterateItems(item, targetSiteList, MediaPathList, ProductPathList, CataloguePathList, sourceLanguage);
-
+            IterateItems(item, targetSiteList, MediaPathList, ProductPathList, CataloguePathList, TargetMediaList, sourceLanguage);
 
         }
 
@@ -290,50 +311,55 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
 
 
 
-        private void IterateItems(Item item, List<string> targetSites, List<string> targetMedia, List<string> targetProduct, List<string> targetCatalogue, Language sourceLang)
+        private void IterateItems(Item item, List<string> targetSites, List<string> targetMedia, List<string> targetProduct, List<string> targetCatalogue,List<string> targetimage, Language sourceLang)
         {
-            CreateContent(item, targetSites, targetMedia, targetProduct, targetCatalogue, sourceLang);
-
+            CreateContent(item, targetSites, targetMedia, targetProduct, targetCatalogue, targetimage, sourceLang);
             if (CopySubItems && item.HasChildren)
             {
                 foreach (Item childItem in item.Children)
                 {
-                    IterateItems(childItem, targetSites, targetMedia, targetProduct, targetCatalogue, sourceLang);
+                    IterateItems(childItem, targetSites, targetMedia, targetProduct, targetCatalogue, targetimage, sourceLang);
 
                 }
             }
         }
 
 
-        private void CreateContent(Item item, List<string> targetSites, List<string> targetMedia, List<string> targetProduct, List<string> targetCatalogue, Language sourceLang)
+        private void CreateContent(Item item, List<string> targetSites, List<string> targetMedia, List<string> targetProduct, List<string> targetCatalogue, List<string> targetimage, Language sourceLang)
+
         {
             Item producPageItem = null;
             Item CataloguePageItem = null;
+
             foreach (var site in targetSites)
             {
+                msg = null;
                 Item source = Context.ContentDatabase.GetItem(item.ID, sourceLang);
                 Item sourcelatest = source.Versions.GetLatestVersion(sourceLang);
                 var language = source.Languages.FirstOrDefault(l => l.Name == sourceLang.ToString());
                 if (language != null)
                 {//For checking whether the source item has a version in that source language or not.
                     var languagespecific = Context.ContentDatabase.GetItem(source.ID, language);
-                    if (languagespecific.Versions.Count <= 0 || languagespecific.TemplateID.ToString() != ("{B76E9B72-04D9-44A5-8885-64D7022E1AC2}"))
+
+                    Database database = Context.ContentDatabase;
+
+                    var catalogue = database.GetItem(sourcelatest["Product"]);
+                    var cataloguespecific = Context.ContentDatabase.GetItem(catalogue.ID, language);
+                    if (cataloguespecific.Versions.Count <= 0 || languagespecific.Versions.Count <= 0 || languagespecific.TemplateID.ToString() != ("{B76E9B72-04D9-44A5-8885-64D7022E1AC2}"))
                     {
-                        msg = msg + "Source Item version does not exist or Source Item is not elligible." + Environment.NewLine;
+                        msg = msg + "Product version or Catalogue Version does not exist or Product is not elligible." + Environment.NewLine + "\n";
                     }
-                    if (languagespecific != null && languagespecific.Versions.Count > 0 && languagespecific.TemplateID.ToString().Contains("{B76E9B72-04D9-44A5-8885-64D7022E1AC2}"))
+                    if (languagespecific != null && cataloguespecific != null && cataloguespecific.Versions.Count > 0 && languagespecific.Versions.Count > 0 && languagespecific.TemplateID.ToString().Contains("{B76E9B72-04D9-44A5-8885-64D7022E1AC2}"))
 
                     {
-                       // string path = source.Parent.Parent.Parent.Parent.Paths.FullPath.ToString().Remove(0, 36);
+                        //   string path = SourceSite.Remove(0, 36);
                         string taggingpath = SourceSite.ToString();
                         Item target = Context.ContentDatabase.GetItem(item.ID, language);
-                        Database database = Context.ContentDatabase;
                         string name = site.ToString().Remove(0, 14).Replace("_", "-");
                         MarketNameList = site.ToString();
-                        var catalogue = database.GetItem(sourcelatest["Product"]);
+                        Database masterDb = Sitecore.Configuration.Factory.GetDatabase("master");
                         var cataloguelatest = catalogue.Versions.GetLatestVersion(sourceLang);
 
-                        Database masterDb = Sitecore.Configuration.Factory.GetDatabase("master");
                         //Conditions checked for the path provided
                         var catalogue1 = targetCatalogue.SingleOrDefault(x => x.Contains(site));
 
@@ -343,7 +369,7 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
                         Sitecore.Data.Items.Item parent1 = masterDb.GetItem(catalogue1);
                         if (parent1 == null)
                         {
-                            msg = msg + "Sorry you have either given invalid path or have not provided any path" + Environment.NewLine;
+                            msg = msg + "Sorry you have either given invalid path or have not provided any path" + Environment.NewLine + "\n";
                         }
 
                         Language languages = Sitecore.Globalization.Language.Parse(name);
@@ -360,7 +386,7 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
                                     {
                                         catalogname = ctname.Name;
                                         CatalogueItemName = ctname.Name.ToString() + "  already exist under " + "" + parent1.Paths.FullPath + ", if you want to create again then you have to delete it first.";
-                                        msg = msg + CatalogueItemName + Environment.NewLine;
+                                        msg = msg + CatalogueItemName + Environment.NewLine + "\n";
                                     }
 
                                 }
@@ -375,7 +401,7 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
                                     CatalogueItemID = ite.ID.ToString();
                                     ItemName = ite.Name.ToString();
                                     msg = msg + "Details of the newly created Catalogue for " + site + ":-" + "\n" + Environment.NewLine;
-                                    msg = msg + "Catalogue Name:- " + ItemName + Environment.NewLine + "Catalogue ID:- " + CatalogueItemID + Environment.NewLine + "Catalogue Path:- " + parent1.Paths.FullPath + Environment.NewLine;
+                                    msg = msg + "Catalogue Name:- " + ItemName + Environment.NewLine + "Catalogue ID:- " + CatalogueItemID + Environment.NewLine + "Catalogue Path:- " + parent1.Paths.FullPath + Environment.NewLine + "\n";
 
 
                                     //For tagging in newly created Catalogue
@@ -536,9 +562,11 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
                                         int result = items4.GetLength(0);
                                         if (count != result)
                                         {
-                                            FormField = "Form Field ";
-                                            msg = msg + FormField + Environment.NewLine + "\n";
+                                            FormField = "Form Field, ";
+
+                                            msg = msg + FormField + "." + Environment.NewLine + "\n";
                                         }
+
 
                                     }
 
@@ -550,11 +578,14 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
                                     var product = targetProduct.SingleOrDefault(x => x.Contains(site));
 
                                     if (product == null)
+                                    {
                                         product = "Required Item Path does not exist";
+
+                                    }
                                     Sitecore.Data.Items.Item parent = masterDb.GetItem(product);
                                     if (parent == null)
                                     {
-                                        msg = msg + "Sorry you have either given invalid path or have not provided any path" + Environment.NewLine;
+                                        msg = msg + "Sorry you have either given invalid path or have not provided any path" + Environment.NewLine + "\n";
                                     }
                                     if (parent != null)
                                     {
@@ -565,7 +596,8 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
                                             {
                                                 productname = "";
                                                 ProductItemName = ptname.Name.ToString() + " is already exist under product, if you want to create again then you have to delete it first.";
-                                                msg = msg + ProductItemName + Environment.NewLine;
+                                                msg = msg + ProductItemName + "\n" + Environment.NewLine;
+
                                             }
 
                                         }
@@ -579,7 +611,7 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
                                             msg = msg + StatusLine2 + Environment.NewLine;
                                             var ite1 = sourcelatest.CopyTo(parent, source.Name);
                                             producPageItem = ite1;
-                                            msg = msg + "Product Name:- " + ite1.Name + Environment.NewLine + "Product ID:- " + ite1.ID.ToString() + Environment.NewLine + "Product Path:- " + parent.Paths.FullPath + Environment.NewLine;
+                                            msg = msg + "Product Name:- " + ite1.Name + Environment.NewLine + "Product ID:- " + ite1.ID.ToString() + Environment.NewLine + "Product Path:- " + parent.Paths.FullPath + Environment.NewLine + "\n";
                                             Sitecore.Data.Fields.MultilistField multiselectField5 = ite1.Fields["Product"];
 
                                             Sitecore.Data.Items.Item[] items5 = multiselectField5.GetItems();
@@ -597,6 +629,27 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
                                                 }
                                             }
 
+                                            // var URL = Context.ContentDatabase.GetItem("/sitecore/content/MNY/Global Configuration/Content Factory Last Report/URL for PDP Pages");
+                                            // string PDP = URL["Value"];
+
+                                            string ProductPath = producPageItem.Paths.FullPath.ToString().Replace("sitecore/content/MNY/" + site + "/Home/", "");
+
+
+                                            //string PDPURL= this.Qualify(ProductPath, site.ToString());
+                                            //PDPURL=PDPURL.Replace("://localsg.btlorealapac.com|", "http://amp.");
+                                            var HostEntry = Context.ContentDatabase.GetItem("/sitecore/content/MNY/Global Configuration/Content Factory Last Report/HostName Configuration");
+                                            string _urlParamsToParse = HostEntry["Host Entries"];
+                                            NameValueCollection namevalue = Sitecore.Web.WebUtil.ParseUrlParameters(_urlParamsToParse);
+                                            foreach (var nv in namevalue.Keys)
+                                            {
+                                                string sitename = site.ToString().Replace("_", "");
+                                                if (sitename == nv.ToString())
+                                                {
+                                                    string value = namevalue[nv.ToString()];
+                                                    string PDPURL = value + ProductPath;
+                                                    msg = msg + "URL for the newly created product:-" + PDPURL + Environment.NewLine + "\n";
+                                                }
+                                            }
 
 
 
@@ -606,6 +659,10 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
 
                                     }
                                     var mediapath = targetMedia.SingleOrDefault(x => x.Contains(site));
+                                    if (mediapath == site.ToString())
+                                    {
+                                        mediapath = "some text";
+                                    }
                                     var pathingswitcherimage = database.GetItem(mediapath.Replace(site, "") + "/" + "Pathing Switcher Image");
                                     var SearchResultsImage = database.GetItem(mediapath.Replace(site, "") + "/" + "Search Results Image");
                                     if (pathingswitcherimage != null)
@@ -624,26 +681,31 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
                                     }
                                     if (SearchResultsImage != null)
                                     {
-                                        foreach (Item childimage in SearchResultsImage.Children)
+                                        if (SearchResultsImage.Children.Count != 0)
                                         {
-                                            producPageItem.Editing.BeginEdit();
-                                            var prodshot = (Data.Fields.ImageField)producPageItem.Fields["Search Results Image"];
+                                            foreach (Item childimage in SearchResultsImage.Children)
+                                            {
+                                                producPageItem.Editing.BeginEdit();
+                                                var prodshot = (Data.Fields.ImageField)producPageItem.Fields["Search Results Image"];
 
-                                            prodshot.MediaID = childimage.ID;
+                                                prodshot.MediaID = childimage.ID;
 
 
-                                            producPageItem.Editing.EndEdit();
+                                                producPageItem.Editing.EndEdit();
 
+                                            }
                                         }
-                                    }
 
+                                    }
+                                    var media1 = targetimage.SingleOrDefault(x => x.Contains(site));
                                     //For Shade Family
                                     foreach (Item child in ite.Children)
                                     {
-                                        if (mediapath == null)
+                                        if (mediapath == "some text" && media1 == null)
                                         {
+                                            msg = msg + "You have not selected any option for media images. So, Images will be as per source market" + Environment.NewLine;
                                             mediapath = "Please provide path";
-                                            msg = msg + "You have not provided media path. So, Images will be as per source market.";
+
                                         }
                                         var mediapathuniq = mediapath.Replace(site, "") + "/" + child.Name + "/";
                                         var productshot = database.GetItem(mediapath.Replace(site, "") + "/" + child.Name + "/" + "Product Shot");
@@ -690,6 +752,8 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
                                             child.Editing.BeginEdit();
                                             child["Additional Images"] = image;
                                             child.Editing.EndEdit();
+
+
                                         }
 
                                         Sitecore.Data.Fields.MultilistField shades = child.Fields["ShadeFamily"];
@@ -719,16 +783,13 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
                                             int result = items5.GetLength(0);
                                             if (count != result)
                                             {
-                                                ShadeFamilyField = "ShadeFamily Field ";
+                                                ShadeFamilyField = "ShadeFamily Field, ";
                                             }
                                         }
                                     }
                                     msg = msg + "Please update these fields manually:- " + "\n" + ShadeFamilyField + Environment.NewLine + "\n" + "\n";
                                     StatusLine1 = "Also update below Data-source for the used renderings:-" + "\n";
-                                    msg = msg + StatusLine1 + Environment.NewLine;
-
-
-
+                                    msg = msg + StatusLine1 + Environment.NewLine;                           //RenderingReference[] renderings = this.GetListOfSublayouts(producPageItem.ID.ToString());
                                     RenderingReference[] renderings = this.GetListOfSublayouts(producPageItem.ID.ToString());
                                     List<string> ListOfDataSource1 = this.GetListOfDataSource(renderings);
                                     foreach (var datasource in ListOfDataSource1)
@@ -737,12 +798,397 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
 
                                     }
 
+
+
+
                                 }
                             }
+                        }
+                    }
+                }
+                var media = targetimage.SingleOrDefault(x => x.Contains(site));
+
+                if (producPageItem != null && media != null)
+                {
+                    string name = site.ToString().Remove(0, 14).Replace("_", "-");
+
+                    var medipath = Context.ContentDatabase.GetItem("/sitecore/media library/Content Factory/" + name);
+                    string SubCategoryName = producPageItem.Parent.Name;
+                    string CategoryName = producPageItem.Parent.Parent.Name;
+
+                    if (producPageItem.Parent.TemplateID.ToString().Contains("{D8B079D5-D92C-4E53-A3DE-B6414332A3CD}"))
+                    {
+                        if (!medipath.Children.Any(i => i.Name == CategoryName))
+                        {
+                            var category = medipath.Add(CategoryName, medipath.Template);
+
+
+                            if (!medipath.Children.Any(i => i.Name == SubCategoryName))
+                            {
+                                category.Add(SubCategoryName, medipath.Template);
+                            }
+                        }
+                        Item ParentSubCategory = medipath.Axes.GetDescendants().Where(i => i.Name == SubCategoryName).SingleOrDefault();
+                        if (ParentSubCategory == null)
+                        {
+                            var parentcategory = medipath.Axes.GetDescendants().Where(i => i.Name == CategoryName).SingleOrDefault();
+                            parentcategory.Add(SubCategoryName, medipath.Template);
+                        }
+                        ParentSubCategory = medipath.Axes.GetDescendants().Where(i => i.Name == SubCategoryName).SingleOrDefault();
+
+
+                        if (ParentSubCategory.Axes.GetDescendants().Any(i => i.Name == producPageItem.Name))
+                        {
+                            var product = ParentSubCategory.Axes.GetDescendants().Where(i => i.Name == producPageItem.Name).SingleOrDefault();
+                            product.Delete();
+
+
+
+
+                        }
+
+
+
+
+
+                        if (!ParentSubCategory.Axes.GetDescendants().Any(i => i.Name == producPageItem.Name))
+                        {
+                            var productfolder = ParentSubCategory.Add(producPageItem.Name, medipath.Template);
+
+                            Item sourceProduct = Context.ContentDatabase.GetItem(item.ID, sourceLang);
+                            Item cataloguelatest = Context.ContentDatabase.GetItem(sourceProduct["Product"]);
+                            Sitecore.Data.Fields.ImageField pathingswitcher = sourceProduct.Fields["Pathing Switcher Image"];
+                            Sitecore.Data.Fields.ImageField searchimage = sourceProduct.Fields["Search Results Image"];
+                            if (pathingswitcher != null)
+                            {
+                                var pathingimage = Context.ContentDatabase.GetItem(pathingswitcher.MediaID);
+                                if (pathingimage != null)
+                                {
+                                    var PathingSwitcherImageFolder = productfolder.Add("Pathing Switcher Image", productfolder.Template);
+                                    pathingimage.CopyTo(PathingSwitcherImageFolder, pathingimage.Name);
+                                    foreach (Item images in PathingSwitcherImageFolder.Children)
+                                    {
+                                        producPageItem.Editing.BeginEdit();
+                                        var pathingswitchimage = (Data.Fields.ImageField)producPageItem.Fields["Pathing Switcher Image"];
+
+                                        pathingswitchimage.MediaID = images.ID;
+                                        producPageItem.Editing.EndEdit();
+
+                                    }
+
+                                }
+
+
+
+
+                            }
+                            if (searchimage != null)
+                            {
+                                var searchresults = Context.ContentDatabase.GetItem(searchimage.MediaID);
+                                if (searchresults != null)
+                                {
+                                    var SearchResultsFolder = productfolder.Add("Search Results Image", productfolder.Template);
+                                    searchresults.CopyTo(SearchResultsFolder, searchresults.Name);
+                                    foreach (Item images1 in SearchResultsFolder.Children)
+                                    {
+                                        producPageItem.Editing.BeginEdit();
+                                        var searchresultimage = (Data.Fields.ImageField)producPageItem.Fields["Search Results Image"];
+
+                                        searchresultimage.MediaID = images1.ID;
+                                        producPageItem.Editing.EndEdit();
+
+
+                                    }
+
+                                }
+
+                            }
+
+                            if (medipath != null)
+                            {
+                                foreach (Item child in CataloguePageItem.Children)
+                                {
+                                    Sitecore.Data.Fields.ImageField productshotsource = child.Fields["Product Shot"];
+                                    var sourceproductshot = Context.ContentDatabase.GetItem(productshotsource.MediaID);
+                                    //    Sitecore.Data.Items.MediaItem getsourceproductshot = new Sitecore.Data.Items.MediaItem(productshotsource.Med);
+
+                                    Sitecore.Data.Fields.ImageField swatchsource = child.Fields["Product Swatch"];
+                                    var sourceproductswatch = Context.ContentDatabase.GetItem(swatchsource.MediaID);
+                                    //  Sitecore.Data.Items.MediaItem getsourceproductswatch = new Sitecore.Data.Items.MediaItem(swatchsource.MediaItem);
+                                    //var sourceproductshot=Context.ContentDatabase.GetItem(getsourceproductshot.Path);
+                                    //var sourceproductswatch= Context.ContentDatabase.GetItem(getsourceproductswatch.Path);
+
+
+
+                                    var shade = productfolder.Add(child.Name, medipath.Template);
+                                    var productshot = shade.Add("Product Shot", shade.Template);
+                                    if (sourceproductshot != null)
+                                    {
+                                        sourceproductshot.CopyTo(productshot, sourceproductshot.Name);
+
+                                        foreach (Item childimage in productshot.Children)
+                                        {
+                                            child.Editing.BeginEdit();
+                                            var prodshot = (Data.Fields.ImageField)child.Fields["Product Shot"];
+
+                                            prodshot.MediaID = childimage.ID;
+
+
+                                            child.Editing.EndEdit();
+
+                                        }
+                                    }
+
+
+
+                                    var swatch = shade.Add("Swatch", shade.Template);
+                                    if (sourceproductswatch != null)
+                                    {
+                                        sourceproductswatch.CopyTo(swatch, sourceproductswatch.Name);
+
+                                        foreach (Item childimage in swatch.Children)
+                                        {
+                                            child.Editing.BeginEdit();
+                                            var prodswatch = (Data.Fields.ImageField)child.Fields["Product Swatch"];
+                                            prodswatch.MediaID = childimage.ID;
+
+                                            child.Editing.EndEdit();
+
+
+                                        }
+
+
+
+
+                                    }
+
+                                    var additionalimagestarget = shade.Add("Additional Images", shade.Template);
+                                    Sitecore.Data.Fields.MultilistField additionalImages = child.Fields["Additional Images"];
+
+                                    foreach (var field in additionalImages)
+                                    {
+                                        if (field != null)
+                                        {
+                                            var additionalimage = Sitecore.Context.ContentDatabase.GetItem(field.ToString());
+                                            if (additionalimage != null)
+                                            {
+                                                additionalimage.CopyTo(additionalimagestarget, additionalimage.Name);
+
+
+
+                                            }
+                                        }
+
+
+
+                                    }
+                                    string image = "";
+                                    foreach (Item childimage in additionalimagestarget.Children)
+                                    {
+                                        image = image + childimage.ID.ToString() + "|";
+                                    }
+
+                                    child.Editing.BeginEdit();
+                                    child["Additional Images"] = image;
+                                    child.Editing.EndEdit();
+
+
+                                }
+
+
+
+                            }
+
+
+
+                        }
+
+
+                    }
+
+                    if (producPageItem.Parent.TemplateID.ToString().Contains("{0D3C8A98-F75A-4C8C-94BE-0FD57B05CB70}"))
+
+                    {
+
+                        var categoryname = producPageItem.Parent.Name;
+                        if (!medipath.Children.Any(i => i.Name == categoryname))
+                        {
+                            var category = medipath.Add(categoryname, medipath.Template);
+
+
+                        }
+                        Item ParentCategory = medipath.Axes.GetDescendants().Where(i => i.Name == categoryname).SingleOrDefault();
+
+                        if (ParentCategory.Axes.GetDescendants().Any(i => i.Name == producPageItem.Name))
+                        {
+
+                            var product = ParentCategory.Axes.GetDescendants().Where(i => i.Name == producPageItem.Name).SingleOrDefault();
+                            product.Delete();
+
+
+
+
+
+                        }
+                        if (!ParentCategory.Axes.GetDescendants().Any(i => i.Name == producPageItem.Name))
+                        {
+
+                            var productfolder = ParentCategory.Add(producPageItem.Name, medipath.Template);
+
+                            Item sourceProduct = Context.ContentDatabase.GetItem(item.ID, sourceLang);
+                            Item cataloguelatest = Context.ContentDatabase.GetItem(sourceProduct["Product"]);
+                            Sitecore.Data.Fields.ImageField pathingswitcher = sourceProduct.Fields["Pathing Switcher Image"];
+                            Sitecore.Data.Fields.ImageField searchimage = sourceProduct.Fields["Search Results Image"];
+                            if (pathingswitcher != null)
+                            {
+                                var pathingimage = Context.ContentDatabase.GetItem(pathingswitcher.MediaID);
+                                if (pathingimage != null)
+                                {
+                                    var PathingSwitcherImageFolder = productfolder.Add("Pathing Switcher Image", productfolder.Template);
+                                    pathingimage.CopyTo(PathingSwitcherImageFolder, pathingimage.Name);
+                                    foreach (Item images in PathingSwitcherImageFolder.Children)
+                                    {
+                                        producPageItem.Editing.BeginEdit();
+                                        var pathingswitchimage = (Data.Fields.ImageField)producPageItem.Fields["Pathing Switcher Image"];
+
+                                        pathingswitchimage.MediaID = images.ID;
+                                        producPageItem.Editing.EndEdit();
+
+                                    }
+
+                                }
+
+
+
+
+                            }
+                            if (searchimage != null)
+                            {
+                                var searchresults = Context.ContentDatabase.GetItem(searchimage.MediaID);
+                                if (searchresults != null)
+                                {
+                                    var SearchResultsFolder = productfolder.Add("Search Results Image", productfolder.Template);
+                                    searchresults.CopyTo(SearchResultsFolder, searchresults.Name);
+                                    foreach (Item images1 in SearchResultsFolder.Children)
+                                    {
+                                        producPageItem.Editing.BeginEdit();
+                                        var searchresultimage = (Data.Fields.ImageField)producPageItem.Fields["Search Results Image"];
+
+                                        searchresultimage.MediaID = images1.ID;
+                                        producPageItem.Editing.EndEdit();
+
+
+                                    }
+
+                                }
+
+                            }
+
+                            if (medipath != null)
+                            {
+                                foreach (Item child in CataloguePageItem.Children)
+                                {
+                                    Sitecore.Data.Fields.ImageField productshotsource = child.Fields["Product Shot"];
+                                    var sourceproductshot = Context.ContentDatabase.GetItem(productshotsource.MediaID);
+                                    //    Sitecore.Data.Items.MediaItem getsourceproductshot = new Sitecore.Data.Items.MediaItem(productshotsource.Med);
+
+                                    Sitecore.Data.Fields.ImageField swatchsource = child.Fields["Product Swatch"];
+                                    var sourceproductswatch = Context.ContentDatabase.GetItem(swatchsource.MediaID);
+                                    //  Sitecore.Data.Items.MediaItem getsourceproductswatch = new Sitecore.Data.Items.MediaItem(swatchsource.MediaItem);
+                                    //var sourceproductshot=Context.ContentDatabase.GetItem(getsourceproductshot.Path);
+                                    //var sourceproductswatch= Context.ContentDatabase.GetItem(getsourceproductswatch.Path);
+
+
+
+                                    var shade = productfolder.Add(child.Name, medipath.Template);
+                                    var productshot = shade.Add("Product Shot", shade.Template);
+                                    if (sourceproductshot != null)
+                                    {
+                                        sourceproductshot.CopyTo(productshot, sourceproductshot.Name);
+
+                                        foreach (Item childimage in productshot.Children)
+                                        {
+                                            child.Editing.BeginEdit();
+                                            var prodshot = (Data.Fields.ImageField)child.Fields["Product Shot"];
+
+                                            prodshot.MediaID = childimage.ID;
+
+
+                                            child.Editing.EndEdit();
+
+                                        }
+                                    }
+
+
+
+                                    var swatch = shade.Add("Swatch", shade.Template);
+                                    if (sourceproductswatch != null)
+                                    {
+                                        sourceproductswatch.CopyTo(swatch, sourceproductswatch.Name);
+
+                                        foreach (Item childimage in swatch.Children)
+                                        {
+                                            child.Editing.BeginEdit();
+                                            var prodswatch = (Data.Fields.ImageField)child.Fields["Product Swatch"];
+                                            prodswatch.MediaID = childimage.ID;
+
+                                            child.Editing.EndEdit();
+
+
+                                        }
+
+
+
+
+                                    }
+
+                                    var additionalimagestarget = shade.Add("Additional Images", shade.Template);
+                                    Sitecore.Data.Fields.MultilistField additionalImages = child.Fields["Additional Images"];
+
+                                    foreach (var field in additionalImages)
+                                    {
+                                        if (field != null)
+                                        {
+                                            var additionalimage = Sitecore.Context.ContentDatabase.GetItem(field.ToString());
+                                            if (additionalimage != null)
+                                            {
+                                                additionalimage.CopyTo(additionalimagestarget, additionalimage.Name);
+
+
+
+                                            }
+                                        }
+
+
+
+                                    }
+                                    string image = "";
+                                    foreach (Item childimage in additionalimagestarget.Children)
+                                    {
+                                        image = image + childimage.ID.ToString() + "|";
+                                    }
+
+                                    child.Editing.BeginEdit();
+                                    child["Additional Images"] = image;
+                                    child.Editing.EndEdit();
+
+
+                                }
+
+
+
+                            }
+
+
+
+
+
+
                         }
 
                     }
                 }
+
                 if (producPageItem == null || CataloguePageItem == null)
                 {
 
@@ -830,24 +1276,39 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
                 }
                 else
                 {
-                    foreach (Item child in CataloguePageItem.Children)
+                    foreach (var Language in producPageItem.Languages)
                     {
-                        var shade = Sitecore.Context.ContentDatabase.GetItem(child.ID, sourceLang);
-                        if (shade.Versions.Count == 1)
+                        string languagetarget = site.ToString().Remove(0, 14).Replace("_", "-");
+                        Language lang = Sitecore.Globalization.Language.Parse(languagetarget);
+
+                        if (Language != lang)
+
                         {
-                            shade.Versions.RemoveVersion();
+                            foreach (Item child in CataloguePageItem.Children)
+                            {
+                                var shade = Sitecore.Context.ContentDatabase.GetItem(child.ID, Language);
+                                if (shade.Versions.Count == 1)
+                                {
+                                    shade.Versions.RemoveVersion();
+                                }
+                            }
+                            var producsource1 = Sitecore.Context.ContentDatabase.GetItem(producPageItem.ID, Language);
+                            if (producsource1.Versions.Count == 1)
+                            {
+                                producsource1.Versions.RemoveVersion();
+                            }
+                            var catalogsource1 = Sitecore.Context.ContentDatabase.GetItem(CataloguePageItem.ID, Language);
+                            if (catalogsource1.Versions.Count == 1)
+                            {
+                                catalogsource1.Versions.RemoveVersion();
+                            }
+
                         }
+
+
                     }
                     var producsource = Sitecore.Context.ContentDatabase.GetItem(producPageItem.ID, sourceLang);
-                    if (producsource.Versions.Count == 1)
-                    {
-                        producsource.Versions.RemoveVersion();
-                    }
                     var catalogsource = Sitecore.Context.ContentDatabase.GetItem(CataloguePageItem.ID, sourceLang);
-                    if (catalogsource.Versions.Count == 1)
-                    {
-                        catalogsource.Versions.RemoveVersion();
-                    }
 
                     if (sourceLang.ToString() == "en-HK" || sourceLang.ToString() == "zh-HK")
                     {
@@ -945,16 +1406,26 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
                         }
                     }
                 }
+                string emailsite = EmailList.SingleOrDefault(x => x.Contains(site));
+                string[] to = emailsite.Split(new char[] { ';' });
+                emailto = to[0];
+                this.Email();
+                finalreportdetails += msg;
+                producPageItem = null;
+                CataloguePageItem = null;
             }
-            this.Email();
-            var finalReport = Sitecore.Context.ContentDatabase.GetItem("/sitecore/content/MNY/Global Configuration/Content Factory Last Report/Report");
-            finalReport.Editing.BeginEdit();
-            finalReport["Description"] = msg;
-            finalReport["Value"] = System.DateTime.Now.ToString();
-            finalReport.Editing.EndEdit();
-        }
+                msg = finalreportdetails;
+                emailto = eml;
+                this.Email();
+                var finalReport = Sitecore.Context.ContentDatabase.GetItem("/sitecore/content/MNY/Global Configuration/Content Factory Last Report/Report");
+                finalReport.Editing.BeginEdit();
+                finalReport["Description"] = msg;
+                finalReport["Value"] = System.DateTime.Now.ToString();
+                finalReport.Editing.EndEdit();
 
+           }
 
+        
 
 
         private void RemovePreviousVersions(Item myItem, bool includeAllLanguages)
@@ -973,22 +1444,25 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
                 }
             }
         }
-        private void Email()
+
+       private void Email()
         {
             var EmailItem = Context.ContentDatabase.GetItem("/sitecore/content/MNY/Global Configuration/Content Factory Last Report/Email Info");
             string from = EmailItem["Value"].ToString();
             string address = EmailItem["Description"].ToString();
             string[] result = address.Split(new char[] { ',' });
 
+
+
             try
             {
-                if (eml != "")
+                if (emailto != "")
                 {
                     MailMessage message = new MailMessage();
                     SmtpClient smtp = new SmtpClient(result[0], System.Convert.ToInt32(result[1]));
                     message.From = new MailAddress(from);
 
-                    message.To.Add(new MailAddress(eml));
+                    message.To.Add(new MailAddress(emailto));
 
                     //message.To.Add(new MailAddress("priyanka.khetarpal@valtech.com"));
                     message.Subject = "Details for newly created items for your market";
@@ -1005,12 +1479,34 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
                     smtp.DeliveryMethod = SmtpDeliveryMethod.Network;
                     smtp.Send(message);
 
+
                 }
 
+                //else if(eml1 != "")
+                //{
+                //    MailMessage message = new MailMessage();
+                //    SmtpClient smtp = new SmtpClient(result[0], System.Convert.ToInt32(result[1]));
+                //    message.From = new MailAddress(from);
+
+                //    message.To.Add(new MailAddress(eml1));
+
+                //    //message.To.Add(new MailAddress("priyanka.khetarpal@valtech.com"));
+                //    message.Subject = "Details for newly created items for your market";
+                //    message.IsBodyHtml = false;
+                //    message.Body.Replace("\r\n", "\n").Replace("\n", "<br />");
+                //    message.Body = Environment.NewLine + "Hello,\n" + Environment.NewLine;
+                //    message.Body = message.Body + msg;
+
+
+                //    message.Body += Environment.NewLine + "Thank You!!";
+                //    smtp.EnableSsl = false;
+                //    smtp.UseDefaultCredentials = true;
+
+                //    smtp.DeliveryMethod = SmtpDeliveryMethod.Network;
+                //    smtp.Send(message);
+                //}
                 else
-                {
-
-                }
+                { }
             }
             catch (Exception exception)
             {
@@ -1042,14 +1538,22 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
         }
 
 
+
+
+
         #region sandeep
 
-        public RenderingReference[] GetRenderings(string placeholderKey, string deviceName, string itemId)
+        public RenderingReference[] GetRenderings(string itemId)
         {
             Item item = Context.ContentDatabase.GetItem(Sitecore.Data.ID.Parse(itemId));
 
+            Database database = Context.ContentDatabase;
+            DeviceItem device = database.Resources.Devices["Default"];
+
+            CountRenderings(item);
+
             Sitecore.Data.Fields.LayoutField layoutField = new Sitecore.Data.Fields.LayoutField(item.Fields[Sitecore.FieldIDs.FinalLayoutField]);
-            Sitecore.Layouts.RenderingReference[] renderings = layoutField.GetReferences(GetDeviceItem("Default"));
+            Sitecore.Layouts.RenderingReference[] renderings = layoutField.GetReferences(device);
 
             //var filteredRenderingList = new List();
 
@@ -1062,6 +1566,22 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
             //}
 
             return renderings;
+        }
+
+        public static System.Tuple<int, int> CountRenderings(Sitecore.Data.Items.Item item)
+        {
+            var sharedRenderingsCount = CountRenderings(item, Sitecore.FieldIDs.LayoutField);
+            var finalRenderingCount = CountRenderings(item, Sitecore.FieldIDs.FinalLayoutField);
+            return Tuple.Create(sharedRenderingsCount, finalRenderingCount);
+        }
+
+        private static int CountRenderings(Sitecore.Data.Items.Item item, Sitecore.Data.ID renderingFieldId)
+        {
+            var field = item.Fields[renderingFieldId];
+            var layoutXml = Sitecore.Data.Fields.LayoutField.GetFieldValue(field);
+            var layout = Sitecore.Layouts.LayoutDefinition.Parse(layoutXml);
+            var deviceLayout = layout.Devices[0] as Sitecore.Layouts.DeviceDefinition;
+            return (deviceLayout?.Renderings.Count) ?? 0;
         }
 
         //public IEnumerable GetRenderingsSettings(string placeholderKey, string deviceName)
@@ -1144,21 +1664,15 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
             List<string> ListOfDataSource1 = new List<string>();
             foreach (RenderingReference rendering in renderings)
             {
-                ListOfDataSource.Add(rendering.Settings.DataSource);
-                foreach (string list in ListOfDataSource)
+                if (rendering.Settings.DataSource != "")
                 {
-                    if (list != "")
-                    {
-                        //var itemm1 =database.GetItem(new ID("{CC6E5109-5FB7-48BC-8306-DB39DDEF8AD3}"));
-                        //var itemm = database.Items.GetItem(rendering.RenderingID);
-                        var renderingName = database.Items.GetItem(rendering.RenderingID).Name.ToString();
-                        ListOfDataSource1.Add("DataSource ID:- " + list + "\n" + "Rendering Name:- " + renderingName + "\n" + "Rendering ID:- " + rendering.RenderingID.ToString() + "\n");
-                    }
+                    var renderingName = database.Items.GetItem(rendering.RenderingID).Name.ToString();
+                    ListOfDataSource1.Add("DataSource ID:- " + rendering.Settings.DataSource.ToString() + "\n" + "Rendering Name:- " + renderingName + "\n" + "Rendering ID:- " + rendering.RenderingID.ToString() + "\n");
                 }
+
             }
             return ListOfDataSource1;
         }
-
 
     }
 }
@@ -1166,3 +1680,14 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
 //ite= stores the newly created catalogue
 //ite1=stores the newly created Product
 //brand1 stores all the tagging which are to be added
+
+
+
+
+
+
+
+
+
+
+
