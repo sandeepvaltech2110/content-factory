@@ -121,6 +121,7 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
                 {
 
                     SourceSite = i.Name;
+                    this.Site.Remove("Maybelline_V3_Global");
                     this.Site.Remove(i.Name);
                 }
             }
@@ -369,7 +370,7 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
                         Sitecore.Data.Items.Item parent1 = masterDb.GetItem(catalogue1);
                         if (parent1 == null)
                         {
-                            msg = msg + "Sorry you have either given invalid path or have not provided any path" + Environment.NewLine + "\n";
+                            msg = msg + "Sorry you have either given invalid path or have not provided any path for "+site.ToString() + Environment.NewLine + "\n";
                         }
 
                         Language languages = Sitecore.Globalization.Language.Parse(name);
@@ -385,7 +386,7 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
                                     if (ctname.Name == catalogue.Name)
                                     {
                                         catalogname = ctname.Name;
-                                        CatalogueItemName = ctname.Name.ToString() + "  already exist under " + "" + parent1.Paths.FullPath + ", if you want to create again then you have to delete it first.";
+                                        CatalogueItemName = ctname.Name.ToString() + "  already exist under " + "" + parent1.Paths.FullPath + " for  "+site.ToString()+ ", if you want to create again then you have to delete it first.";
                                         msg = msg + CatalogueItemName + Environment.NewLine + "\n";
                                     }
 
@@ -595,7 +596,7 @@ namespace Sitecore.ContentFactory.SmartTools.Dialogs
                                             if (ptname.Name == catalogue.Name)
                                             {
                                                 productname = "";
-                                                ProductItemName = ptname.Name.ToString() + " is already exist under product, if you want to create again then you have to delete it first.";
+                                                ProductItemName = ptname.Name.ToString() + " is already exist under"+" " + parent.Paths.FullPath + " for  " + site.ToString()+", if you want to create again then you have to delete it first.";
                                                 msg = msg + ProductItemName + "\n" + Environment.NewLine;
 
                                             }
