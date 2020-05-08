@@ -1,7 +1,6 @@
 ﻿namespace Sitecore.ContentFactory.SmartTools.Commands
 {
     using Sitecore;
-    using Sitecore.Data;
     using Sitecore.Data.Items;
     using Sitecore.Diagnostics;
     using Sitecore.Globalization;
@@ -25,86 +24,77 @@
                 Error.AssertObject(context, "context");
                 if (context.Items.Length == 1)
                 {
-                    Item item = Context.ContentDatabase.GetItem(context.Items[0].ID, context.Items[0].Language, context.Items[0].Version);
-                    CultureInfo info = new CultureInfo(StringUtil.GetString(Sitecore.Context.ClientPage.ServerProperties["TranslatingLanguage"]));
-                    Item item2 = context.Items[0];
+                    //TODO: Remove the commented unused code.
+                    //Item item = Context.ContentDatabase.GetItem(context.Items[0].ID, context.Items[0].Language, context.Items[0].Version);
+                    //CultureInfo info = new CultureInfo(StringUtil.GetString(Sitecore.Context.ClientPage.ServerProperties["TranslatingLanguage"]));
+                    Item item = context.Items[0];
                     NameValueCollection parameters = new NameValueCollection();
-                    parameters["id"] = item2.ID.ToString();
-                    parameters["language"] = item2.Language.ToString();
-                    parameters["version"] = item2.Version.ToString();
+                    parameters["id"] = item.ID.ToString();
+                    parameters["language"] = item.Language.ToString();
+                    parameters["version"] = item.Version.ToString();
 
-                    IWorkflow workflow = item2.Database.WorkflowProvider.GetWorkflow(item2);
+                    //IWorkflow workflow = item.Database.WorkflowProvider.GetWorkflow(item);
                     Context.ClientPage.Start(this, "Run", parameters);
                 }
 
             }
-            catch (Exception exception)
+            catch (Exception ex)
             {
-				
-				
-				
-                Sitecore.Diagnostics.Log.Error(exception.Message, this);
+                Sitecore.Diagnostics.Log.Error(ex.Message, this);
+                //TODO : Rethrow the exception so that end user will know about error.
             }
         }
 
         public override CommandState QueryState(CommandContext commandContext)
         {
             Error.AssertObject(commandContext, "context");
-            if (commandContext.Items.Length != 1)
+            if (commandContext.Items.Length != 1 || commandContext.Items[0].Appearance.ReadOnly || !commandContext.Items[0].Access.CanRead())
             {
                 return CommandState.Disabled;
             }
-            Item item = commandContext.Items[0];
-            if (item.Appearance.ReadOnly)
-            {
-                return CommandState.Disabled;
-            }
-            if (!item.Access.CanRead())
-            {
-                return CommandState.Disabled;
-            }
+
             return base.QueryState(commandContext);
         }
 
         protected void Run(ClientPipelineArgs args)
-        {            
+        {
             try
             {
-                string str = args.Parameters["id"];
-                string name = args.Parameters["language"];
-                string str3 = args.Parameters["version"];
-                Item item = Context.ContentDatabase.Items[str, Language.Parse(name), Sitecore.Data.Version.Parse(str3)];
+                string id = args.Parameters["id"];
+                string language = args.Parameters["language"];
+                string version = args.Parameters["version"];
+
+                Item item = Context.ContentDatabase.Items[id, Language.Parse(language), Sitecore.Data.Version.Parse(version)];
                 Error.AssertItemFound(item);
+
                 if (SheerResponse.CheckModified())
                 {
                     if (args.IsPostBack)
                     {
-                        if (args.Result == "yes")
+                        if (args.Result.ToLower() == "yes")
                         {
-                            Context.ClientPage.SendMessage(this, "item:load(id=" + str + ",language=" + name + ",version=" + str3 + ")");
-                            UrlString str4 = new UrlString(UIUtil.GetUri("control:CreateContent"));
-                            str4.Add("id", item.ID.ToString());
-                            str4.Add("la", item.Language.ToString());
-                            str4.Add("vs", item.Version.ToString());
-                            str4.Add("ci", item.Language.ToString());
-                            SheerResponse.ShowModalDialog(str4.ToString(),"this is for testing");
-                           
-
+                            Context.ClientPage.SendMessage(this, "item:load(id=" + id + ",language=" + language + ",version=" + version + ")");
+                            var content = new UrlString(UIUtil.GetUri("control:CreateContent"));
+                            content.Add("id", item.ID.ToString());
+                            content.Add("la", item.Language.ToString());
+                            content.Add("vs", item.Version.ToString());
+                            content.Add("ci", item.Language.ToString());
+                            SheerResponse.ShowModalDialog(content.ToString(), "this is for testing"); // TODO :  Give proper meaningful message
                         }
+                        // TODO : If REsult is Not "yes" then what to do?
                     }
                     else
                     {
-                        UrlString str4 = new UrlString(UIUtil.GetUri("control:CreateContent"));
-                        str4.Add("id", item.ID.ToString());
-                        str4.Add("la", item.Language.ToString());
-                        str4.Add("vs", item.Version.ToString());
-                        str4.Add("ci", item.Language.ToString());
-                        SheerResponse.ShowModalDialog(str4.ToString(), true);
-                      
+                        var content = new UrlString(UIUtil.GetUri("control:CreateContent"));
+                        content.Add("id", item.ID.ToString());
+                        content.Add("la", item.Language.ToString());
+                        content.Add("vs", item.Version.ToString());
+                        content.Add("ci", item.Language.ToString());
+                        SheerResponse.ShowModalDialog(content.ToString(), true);
 
-                       
                         args.WaitForPostBack();
                     }
+
                     var isJobDone = JobManager.GetJobs().FirstOrDefault(j => j.Name.Equals("createContent") && j.Status.State == JobState.Running);
                     if (isJobDone != null && !isJobDone.IsDone)
                     {
@@ -112,14 +102,14 @@
                     }
                     else
                     {
+                        //TODO: Can we make this item path as configurable. So that this can be used for other applciation also.
                         var finalReport = Sitecore.Context.ContentDatabase.GetItem("/sitecore/content/MNY/Global Configuration/Content Factory Last Report/Report");
                         string messageReport = finalReport["Description"];
-                   
-                   
+
                         Context.ClientPage.ClientResponse.Alert(messageReport);
                         finalReport.Editing.BeginEdit();
-                        finalReport["Description"] = "";
-                    
+                        finalReport["Description"] = string.Empty;
+
                         finalReport.Editing.EndEdit();
                     }
                 }
@@ -127,6 +117,7 @@
             catch (Exception exception)
             {
                 Sitecore.Diagnostics.Log.Error(exception.Message, this);
+                //TODO : Rethrow the exception so that end user will know about error.
             }
         }
     }

@@ -5,4 +5,8 @@ function toggleChkBoxMethod2(formName){
 		item.checked = !item.checked;
 	});
 	$('togglechkbox').checked = !$('togglechkbox').checked;
+
 }
+
+
+

@@ -1,0 +1,61 @@
+.accordion_content {
+    display: none;
+}
+.accordion_tab {
+    background: #fff !important;
+    border: 1px solid #ccc;
+    border-radius: 2px;
+    margin-top: 5px;
+    cursor: pointer;
+}
+#TranslateCustom_Reviewer div:nth-child(even) {
+    background: transparent !important;
+    padding: 10px;
+    height: auto !important;
+    position: relative;
+}
+#TranslateCustom_Reviewer div:nth-child(odd) {
+    background: transparent !important;
+    padding: 10px;
+    height: auto !important;
+    position: relative;
+}
+#TranslateCustom_Reviewer div.accordion_content {
+    background: #f5f5f5 !important;
+    border-bottom: 2px solid #B9120A;
+}
+.accordion_tab::after {
+    content: '+';
+    float: right;
+    padding-right: 5px;
+    padding-top: 1px;
+    font-size: 14px;
+}
+.accordion_tab.active::after {
+    content: '_';
+    line-height: 1;
+    padding-top: 0px;
+    margin-top: -3px;
+}
+#TranslateCustom_Reviewer .reviewerCheckbox {
+    margin-left: 2px;
+    vertical-align: middle;
+    top: -1px;
+    position: relative;
+}
+#Group_Options {
+    background: #fff !important;
+    border: 1px solid #ccc;
+    border-radius: 2px;
+}
+#Group_Options input[type=textbox] {
+    border-color: #ccc !important;
+}
+#TranslateCustom_Reviewer .accordion_tab .reviewerCheckbox {
+    float: left;
+    top: 4px;
+}
+#TranslateCustom_Reviewer .accordion_content input[disabled] {
+    opacity: 0.5;
+    background: #ccc;
+}

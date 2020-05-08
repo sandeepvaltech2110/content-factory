@@ -2,8 +2,7 @@
 <control xmlns:def="Definition" xmlns="http://schemas.sitecore.net/Visual-Studio-Intellisense" xmlns:content="http://www.sitecore.net/content">
   <CreateContent>
     <FormDialog Icon="Control/32x32/edit_b.png" Header="Content Factory:Create Content in one click" 
-                Text="Use this form to create new item and publish the content from source site for the current content item and all 
-				the children items." OKButton="Create Content">
+                Text="Use this form to create content from source site to target sites selected." OKButton="Create Content">
 
       <Stylesheet Key="Warning">
         .left {
@@ -15,6 +14,13 @@
    <Border GridPanel.NoWrap="true" width="50%" class="left">
        <Literal Text="Source Language :"/>
         <Combobox ID="Source" Change="Source_OnChange"/>
+      </Border>
+	  
+      <Space Width="2"/>
+	   <Border GridPanel.NoWrap="true" width="100%" class="left">
+        <Groupbox ID="Group_Options">
+          <Literal ID="Options"/>
+        </Groupbox>
       </Border>
       <Space Width="2"/>
      
@@ -30,6 +36,8 @@
       <CodeBeside Type="Sitecore.ContentFactory.SmartTools.Dialogs.CreateContentFactoryDialog, Sitecore.ContentFactory.SmartTools" />
       <Stylesheet Src="Content Manager.css" DeviceDependant="true"/>
       <Script Src="/sitecore/shell/Applications/Content Manager/Content Editor.js"/>
+	  <Stylesheet Src="/sitecore/Shell/Applications/Dialogs/CreateContent/content-factory.css"/>
+	  <Script Src="/sitecore/Shell/Applications/Dialogs/CreateContent/content-factory.js"/>
 
       <Border ID="Fields" Background="white"/>
 
@@ -41,12 +49,7 @@
 		
       </Border>
 	  
-      <Border GridPanel.NoWrap="true" width="100%" class="left">
-        <Groupbox ID="Group_Options" Header="Options">
-          <Literal ID="Options"/>
-        </Groupbox>
-      </Border>
-      <Space Width="2"/>
+     
     </FormDialog>
   </CreateContent>
 </control>
